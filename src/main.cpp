@@ -20,6 +20,16 @@ static void glfw_error_callback(int error, const char* description)
     spdlog::error("GLFW Error {} : {}", error, description);
 }
 
+void init_style(float scale) {
+    // 主题
+    ImGui::StyleColorsDark();
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(scale);
+    style.FontScaleDpi = scale;
+    // 字体
+    style.FontSizeBase = 20.0f;
+}
+
 int main(int, char**)
 {
     spdlog::cfg::load_env_levels("WOW_LOG_LEVEL");
@@ -46,24 +56,17 @@ int main(int, char**)
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     // 支持键盘控制
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    // 主题
-    ImGui::StyleColorsDark();
-    // 缩放
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(main_scale);
-    style.FontScaleDpi = main_scale;
-    // 初始化后端GLFW与OpenGL
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-    // 字体
-    style.FontSizeBase = 40.0f;
 #ifdef _WIN32
-    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\Deng.ttf");
+    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Deng.ttf");
 #else
     io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc");
 #endif
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+    // 缩放
+    init_style(main_scale);
+    // 初始化后端GLFW与OpenGL
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
