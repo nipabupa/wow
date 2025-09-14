@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
-set(CMAKE_CXX_FLAGS_DEBUG "-g") # Debug 模式
+set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
 set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
@@ -41,6 +41,10 @@ file(GLOB_RECURSE SOURCES src/*.cpp)
 # 创建二进制文件
 add_executable(wow ${SOURCES} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
 # 链接GLFW OPenGL
-target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)
+if(WIN32)
+    target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)
+else()
+    target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a GL)
+endif()
 # 链接spdlog
 target_link_libraries(wow ${SPDLOG_DIR}/lib/libspdlog.a)
