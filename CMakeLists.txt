@@ -2,23 +2,33 @@ cmake_minimum_required(VERSION 3.31.0)
 
 project(wow VERSION 1.0)
 
+# 设置C++标准
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 生成compile_command.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
-# set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
+set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g") # Debug 模式
-
 # 自定义目录
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
-
+set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
+set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
+# 头文件
 include_directories(
+    ${GLFW_DIR}/include
+    ${SPDLOG_DIR}/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${PROJECT_SOURCE_DIR}/include
 )
-
+# 窗口与OpenGL代码
+set(IMGUI_BACKDENDS_SOURCES
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+)
+# IMGUI代码
 set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_demo.cpp
@@ -26,27 +36,11 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
 )
-
-if(${WIN32})
-    set(IMGUI_BACKDENDS_SOURCES
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
-    )
-else()
-    set(IMGUI_BACKDENDS_SOURCES
-        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
-    )
-    target_link_libraries(wow GL glfw3)
-endif()
 # src目录下所有cpp文件
 file(GLOB_RECURSE SOURCES src/*.cpp)
 # 创建二进制文件
-add_executable(wow WIN32 ${SOURCES} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
-# 链接库
-if(${WIN32})
-    # 链接库
-    target_link_libraries(wow opengl32 gdi32 dwmapi)
-else()
-    target_link_libraries(wow GL glfw3)
-endif()
+add_executable(wow ${SOURCES} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
+# 链接GLFW OPenGL
+target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)
+# 链接spdlog
+target_link_libraries(wow ${SPDLOG_DIR}/lib/libspdlog.a)

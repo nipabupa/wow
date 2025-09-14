@@ -1,6 +1,6 @@
 .cache
-imgui
 debug
 release
 build
+lib
 compile_commands.json
