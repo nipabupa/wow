@@ -5,7 +5,7 @@
 #include "spdlog/cfg/env.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "utils.h"
-#include "ui.h"
+#include "style.h"
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
@@ -15,19 +15,12 @@
 std::shared_ptr<spdlog::logger> logger;
 
 
+void Draw();
+
+
 static void glfw_error_callback(int error, const char* description)
 {
     spdlog::error("GLFW Error {} : {}", error, description);
-}
-
-void init_style(float scale) {
-    // 主题
-    ImGui::StyleColorsDark();
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(scale);
-    style.FontScaleDpi = scale;
-    // 字体
-    style.FontSizeBase = 20.0f;
 }
 
 int main(int, char**)
@@ -59,10 +52,10 @@ int main(int, char**)
 #ifdef _WIN32
     io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Deng.ttf");
 #else
-    io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc");
+    io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc");
 #endif
     // 缩放
-    init_style(main_scale);
+    InitStyle(main_scale);
     // 初始化后端GLFW与OpenGL
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -81,7 +74,7 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // draw
-        draw();
+        Draw();
         // Rendering
         ImGui::Render();
         int display_w, display_h;

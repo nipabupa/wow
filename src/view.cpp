@@ -1,20 +1,28 @@
 #include "imgui.h"
+#include "style.h"
 
 // Our state
 bool show_demo_window = true;
 bool show_another_window = false;
 
 
-void draw() {
+void Draw() {
     static float f = 0.0f;
     static int counter = 0;
 
     ImGui::Begin("我很好");
-    ImGui::Text("你好");
+
+    ImGui::Title("你好");
     ImGui::Checkbox("Demo Window", &show_demo_window);
     ImGui::Checkbox("Another Window", &show_another_window);
     ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    if (ImGui::Button("Button")) {
+    if (ImGui::Button("Button1")) {
+        counter++;
+    }
+    if (ImGui::PrimaryButton("Button2")) {
+        counter++;
+    }
+    if (ImGui::DangerButton("Button3")) {
         counter++;
     }
     ImGui::SameLine();
