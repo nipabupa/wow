@@ -1,21 +1,43 @@
 #include "imgui.h"
-#include "style.h"
+#include "app.h"
 
 // Our state
 bool show_demo_window = true;
 bool show_another_window = false;
+bool is_loading = false;
 
 
-void Draw() {
+void FrameText(const char *text) {
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
+    ImGui::TextUnformatted(text);
+}
+
+
+void Draw(int width, int height) {
+    auto& style = ImGui::GetStyle();
     static float f = 0.0f;
     static int counter = 0;
-
-    ImGui::Begin("我很好");
-
+    //----------------------------
+    // 功能窗口渲染
+    //----------------------------
+    if(is_loading) {
+        ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
+        ImGui::Spinner("Spinner", style.FontSizeBase, 6, LoadingColor);
+        ImGui::SetWindowPos(ImVec2(width - ImGui::GetWindowSize().x - style.WindowPadding.x, 0));
+        ImGui::End();
+    }
+    //----------------------------
+    // 主窗口渲染
+    //----------------------------
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+    ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
     ImGui::Title("你好");
     ImGui::Checkbox("Demo Window", &show_demo_window);
     ImGui::Checkbox("Another Window", &show_another_window);
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+    ImGui::PushItemWidth(200.0f);
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+    ImGui::PopItemWidth();
+    ImGui::ToggleButton("状态", &show_another_window);
     if (ImGui::Button("Button1")) {
         counter++;
     }
@@ -27,19 +49,13 @@ void Draw() {
     }
     ImGui::SameLine();
     ImGui::Text("counter = %d", counter);
+    if (ImGui::GetWindowPos().x != 0) {
+        ImGui::SetWindowSize(ImVec2(width, height));
+        ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+    }
     ImGui::End();
- 
-    if(show_demo_window) {
-        ImGui::ShowDemoWindow(&show_demo_window);
-    }
-
-    // 3. Show another simple window.
-    if (show_another_window)
-    {
-        ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
+    ImGui::PopStyleVar();
+    //----------------------------
+    // 独立窗口渲染
+    //----------------------------
 }

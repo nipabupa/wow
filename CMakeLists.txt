@@ -13,6 +13,7 @@ set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
+set(IMPLOT_DIR ${PROJECT_SOURCE_DIR}/lib/implot)
 set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
 set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
 # 头文件
@@ -21,6 +22,7 @@ include_directories(
     ${SPDLOG_DIR}/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
+    ${IMPLOT_DIR}
     ${PROJECT_SOURCE_DIR}/include
 )
 # 窗口与OpenGL代码
@@ -35,6 +37,9 @@ set(IMGUI_SOURCES
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMPLOT_DIR}/implot.cpp
+    ${IMPLOT_DIR}/implot_demo.cpp
+    ${IMPLOT_DIR}/implot_items.cpp
 )
 # src目录下所有cpp文件
 file(GLOB_RECURSE SOURCES src/*.cpp)

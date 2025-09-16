@@ -5,17 +5,17 @@
 #include "spdlog/cfg/env.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 #include "utils.h"
-#include "style.h"
+#include "app.h"
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
+#ifdef IMPLOT_ENABLED
+#include "implot.h"
+#endif
 
 
 std::shared_ptr<spdlog::logger> logger;
-
-
-void Draw();
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -35,9 +35,13 @@ int main(int, char**)
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_MAXIMIZED, 0);
+    glfwWindowHint(GLFW_RESIZABLE, 0);
     // 创建上下文
     float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    GLFWwindow* window = glfwCreateWindow((int)(1280 * main_scale), (int)(800 * main_scale), "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+    int display_w = (int)(800 * main_scale);
+    int display_h = (int)(600 * main_scale);
+    GLFWwindow* window = glfwCreateWindow(display_w, display_h, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
     if (window == nullptr) {
         return 1;
     }
@@ -46,7 +50,10 @@ int main(int, char**)
     // 初始化上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+#ifdef IMPLOT_ENABLED
+    ImPlot::CreateContext();
+#endif
+    ImGuiIO& io = ImGui::GetIO();
     // 支持键盘控制
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 #ifdef _WIN32
@@ -74,10 +81,9 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // draw
-        Draw();
+        Draw(display_w, display_h);
         // Rendering
         ImGui::Render();
-        int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
@@ -89,6 +95,9 @@ int main(int, char**)
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+#ifdef IMPLOT_ENABLED
+    ImPlot::DestroyContext();
+#endif
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);

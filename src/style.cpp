@@ -1,17 +1,21 @@
-# include "imgui.h"
+#include "imgui.h"
+#include "imgui_internal.h"
+#include "app.h"
 
 
 void InitStyle(float scale) {
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     style.FontScaleDpi = scale;
-    style.FontScaleMain = scale;
-    style.FontSizeBase = 20.0f;
+    // style.FontScaleMain = scale;
+    style.FontSizeBase = 16.0f;
     // size
     style.WindowPadding = ImVec2(style.FontSizeBase, style.FontSizeBase);
     style.WindowBorderSize = 1.0f;
     style.WindowRounding = style.FontSizeBase / 2;
     style.ScrollbarSize = style.FontSizeBase / 2;
+    style.ScrollbarRounding = style.FontSizeBase / 4;
+    style.GrabRounding = style.FontSizeBase / 4;
     style.ItemSpacing = ImVec2(style.FontSizeBase, style.FontSizeBase);
     style.ItemInnerSpacing = ImVec2(style.FontSizeBase / 2, 0);
     style.FramePadding = ImVec2(style.FontSizeBase / 2, style.FontSizeBase / 2);
@@ -22,8 +26,8 @@ void InitStyle(float scale) {
     style.CellPadding = ImVec2(style.FontSizeBase / 2, style.FontSizeBase / 4);
     // color
     auto colors = style.Colors;
-    colors[ImGuiCol_WindowBg] = ImVec4(0.125f, 0.125f, 0.125f, 1.0f);
-    colors[ImGuiCol_ChildBg] = ImVec4(0.153f, 0.153f, 0.153f, 1.0f);
+    colors[ImGuiCol_WindowBg] = BackgroundColor;
+    colors[ImGuiCol_ChildBg] = CardColor;
     colors[ImGuiCol_Border] = ImVec4(0.153f, 0.153f, 0.153f, 1.0f);
     colors[ImGuiCol_Text] = ImVec4(0.808f, 0.808f, 0.808f, 1.0f);
     colors[ImGuiCol_TextSelectedBg] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
@@ -35,32 +39,117 @@ void InitStyle(float scale) {
     colors[ImGuiCol_ButtonActive] = ImVec4(0.231f, 0.231f, 0.243f, 1.0f);
     colors[ImGuiCol_ButtonHovered] = ImVec4(0.271f, 0.271f, 0.282f, 1.0f);
     colors[ImGuiCol_CheckMark] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
+    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.125f, 0.125f, 0.125f, 0.5f);
     style.ScaleAllSizes(scale);
 }
 
 
 namespace ImGui {
     void Title(const char* label) {
-        ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 5);
-        ImGui::PushStyleColor(ImGuiCol_Text, 0x54A9FFFF);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 8);
         ImGui::Text("%s", label);
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor();
         ImGui::PopFont();
     }
 
     bool PrimaryButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, 0x54A9FFFF);
+        ImGui::PushStyleColor(ImGuiCol_Text, PrimaryColor);
         auto state = ImGui::Button(label, size);
         ImGui::PopStyleColor();
         return state;
     }
 
     bool DangerButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, 0xFC724EFF);
+        ImGui::PushStyleColor(ImGuiCol_Text, DangerColor);
         auto state = ImGui::Button(label, size);
         ImGui::PopStyleColor();
         return state;
+    }
+
+    void BufferingBar(const char* label, float value,  const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems) {
+            return;
+        }
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 size = size_arg;
+        size.x -= style.FramePadding.x * 2;
+        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+        ItemSize(bb, style.FramePadding.y);
+        if (!ItemAdd(bb, id)) {
+            return;
+        }
+        // Render
+        const float circleStart = size.x * 0.7f;
+        const float circleEnd = size.x;
+        const float circleWidth = circleEnd - circleStart;
+        window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), bg_col);
+        window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart*value, bb.Max.y), fg_col);
+        const float t = g.Time;
+        const float r = size.y / 2;
+        const float speed = 1.5f;
+        const float a = speed*0;
+        const float b = speed*0.333f;
+        const float c = speed*0.666f;
+        const float o1 = (circleWidth+r) * (t+a - speed * (int)((t+a) / speed)) / speed;
+        const float o2 = (circleWidth+r) * (t+b - speed * (int)((t+b) / speed)) / speed;
+        const float o3 = (circleWidth+r) * (t+c - speed * (int)((t+c) / speed)) / speed;
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o1, bb.Min.y + r), r, bg_col);
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o2, bb.Min.y + r), r, bg_col);
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + circleEnd - o3, bb.Min.y + r), r, bg_col);
+    }
+
+    void Spinner(const char* label, float radius, int thickness, const ImVec4& color) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems) {
+            return;
+        }
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        ImVec2 pos = window->DC.CursorPos;
+        ImVec2 size((radius )*2, (radius + style.FramePadding.y)*2);
+        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+        ItemSize(bb, style.FramePadding.y);
+        if (!ItemAdd(bb, id)) {
+            return;
+        }
+        // Render
+        window->DrawList->PathClear();
+        int num_segments = 30;
+        int start = abs(ImSin(g.Time*1.8f)*(num_segments-5));
+        const float a_min = IM_PI*2.0f * ((float)start) / (float)num_segments;
+        const float a_max = IM_PI*2.0f * ((float)num_segments-3) / (float)num_segments;
+        const ImVec2 centre = ImVec2(pos.x+radius, pos.y+radius+style.FramePadding.y);
+        for (int i = 0; i < num_segments; i++) {
+            const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a+g.Time*8) * radius, centre.y + ImSin(a+g.Time*8) * radius));
+        }
+        window->DrawList->PathStroke(ColorConvertFloat4ToU32(color), false, thickness);
+    }
+
+    void ToggleButton(const char* str_id, bool* v) {
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        float height = ImGui::GetFrameHeight();
+        float width = height * 1.55f;
+        float radius = height * 0.50f;
+        ImGui::InvisibleButton(str_id, ImVec2(width, height));
+        if (ImGui::IsItemClicked()) {
+            *v = !*v;
+        }
+        float t = *v ? 1.0f : 0.0f;
+        ImGuiContext& g = *GImGui;
+        float ANIM_SPEED = 0.08f;
+        if (g.LastActiveId == g.CurrentWindow->GetID(str_id)) {
+            float t_anim = ImSaturate(g.LastActiveIdTimer / ANIM_SPEED);
+            t = *v ? (t_anim) : (1.0f - t_anim);
+        }
+        ImU32 col_bg;
+        col_bg = ImGui::GetColorU32(ImLerp(PrimaryColor, DangerColor, t));
+        draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
+        draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
     }
 }
