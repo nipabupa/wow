@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31.0)
+cmake_minimum_required(VERSION 3.10.0)
 
 project(wow VERSION 1.0)
 
@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
+# add_definitions(-DWIN32)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
@@ -45,7 +46,7 @@ set(IMGUI_SOURCES
 file(GLOB_RECURSE SOURCES src/*.cpp)
 # 创建二进制文件
 add_executable(wow ${SOURCES} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
-# 链接GLFW OPenGL
+# 链接GLFW OpenGL
 if(WIN32)
     target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)
 else()

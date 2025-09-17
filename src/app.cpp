@@ -4,23 +4,31 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/cfg/env.h"
 #include "spdlog/sinks/rotating_file_sink.h"
-#include "utils.h"
 #include "app.h"
+#include "utils.h"
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
-#ifdef IMPLOT_ENABLED
 #include "implot.h"
-#endif
 
 
+// 全局状态初始化
+bool is_loading = false;
+std::string msg;
+void (*confirm)() = NULL; // 是否点击确认回调
+// 日志初始化
 std::shared_ptr<spdlog::logger> logger;
 
 
 static void glfw_error_callback(int error, const char* description)
 {
     spdlog::error("GLFW Error {} : {}", error, description);
+}
+
+static void glfw_close_callback(GLFWwindow* window) {
+    Close();
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
 int main(int, char**)
@@ -45,14 +53,13 @@ int main(int, char**)
     if (window == nullptr) {
         return 1;
     }
+    glfwSetWindowCloseCallback(window, glfw_close_callback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
     // 初始化上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-#ifdef IMPLOT_ENABLED
     ImPlot::CreateContext();
-#endif
     ImGuiIO& io = ImGui::GetIO();
     // 支持键盘控制
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -95,9 +102,7 @@ int main(int, char**)
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-#ifdef IMPLOT_ENABLED
     ImPlot::DestroyContext();
-#endif
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);

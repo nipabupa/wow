@@ -8,7 +8,7 @@ void InitStyle(float scale) {
     ImGuiStyle& style = ImGui::GetStyle();
     style.FontScaleDpi = scale;
     // style.FontScaleMain = scale;
-    style.FontSizeBase = 16.0f;
+    style.FontSizeBase = FontBase;
     // size
     style.WindowPadding = ImVec2(style.FontSizeBase, style.FontSizeBase);
     style.WindowBorderSize = 1.0f;
@@ -130,16 +130,20 @@ namespace ImGui {
         window->DrawList->PathStroke(ColorConvertFloat4ToU32(color), false, thickness);
     }
 
-    void ToggleButton(const char* str_id, bool* v) {
+    void ToggleButton(const char* str_id, bool* v, const char* other_label) {
+        auto style = ImGui::GetStyle();
+        ImGui::BeginGroup();
+        ImGui::AlignTextToFramePadding(); 
+        ImGui::PushStyleVarX(ImGuiStyleVar_ItemSpacing, style.FontSizeBase / 2);
+        ImGui::TextUnformatted(other_label);
+        ImGui::SameLine();
         ImVec2 p = ImGui::GetCursorScreenPos();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         float height = ImGui::GetFrameHeight();
         float width = height * 1.55f;
         float radius = height * 0.50f;
         ImGui::InvisibleButton(str_id, ImVec2(width, height));
-        if (ImGui::IsItemClicked()) {
-            *v = !*v;
-        }
+        if (ImGui::IsItemClicked()) *v = !*v;
         float t = *v ? 1.0f : 0.0f;
         ImGuiContext& g = *GImGui;
         float ANIM_SPEED = 0.08f;
@@ -148,8 +152,33 @@ namespace ImGui {
             t = *v ? (t_anim) : (1.0f - t_anim);
         }
         ImU32 col_bg;
-        col_bg = ImGui::GetColorU32(ImLerp(PrimaryColor, DangerColor, t));
+        if (ImGui::IsItemHovered())
+            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], SecondColor, t));
+        else
+            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], PrimaryColor, t));
         draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
         draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
+        ImGui::SameLine();
+        ImGui::TextUnformatted(str_id);
+        ImGui::PopStyleVar();
+        ImGui::EndGroup();
+    }
+
+    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags) {
+        if (ImGui::BeginCombo(label, items[index], flags)) {
+            for (int n = 0; n < size; n++) {
+                const bool is_selected = (index == n);
+                if (ImGui::Selectable(items[n], is_selected)) {
+                    index = n;
+                    if (callback != NULL) {
+                        callback();
+                    }
+                }
+                if (is_selected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
     }
 }

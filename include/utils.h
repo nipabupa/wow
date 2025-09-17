@@ -1,7 +1,8 @@
-#include "spdlog/spdlog.h"
-
-#ifndef GLOBALVAR_H
-#define GLOBALVAR_H
-// 全局日志打印
-extern std::shared_ptr<spdlog::logger> logger;
-#endif // GLOBALVAR_H
+// 选择单个文件
+void SelectFile(char* filename);
+// 选择多个文件
+void SelectFiles();
+// 选择目录
+void SelectDirectory(char* dirname);
+// 保存文件
+void SaveFile(char* filename);

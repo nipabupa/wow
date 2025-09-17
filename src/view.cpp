@@ -1,22 +1,41 @@
 #include "imgui.h"
 #include "app.h"
-
-// Our state
-bool show_demo_window = true;
-bool show_another_window = false;
-bool is_loading = false;
+#include <cstddef>
+#include <iostream>
 
 
-void FrameText(const char *text) {
-    ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
-    ImGui::TextUnformatted(text);
+void Content() {
+    static float f = 0.0f;
+    static int counter = 0;
+    static short index = 0;
+    static bool state;
+    ImGui::Title("你好");
+    ImGui::PushItemWidth(200.0f);
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
+    ImGui::PopItemWidth();
+    ImGui::ToggleButton("原型", &state, "方形");
+    ImGui::Checkbox("形状", &state);
+    const char* items[] = {"111", "222", "333"};
+    ImGui::CustomCombo("选择", items, 3, index);
+    if (ImGui::PrimaryButton("Button1")) {
+        counter++;
+    }
+    if (ImGui::DangerButton("Button2")) {
+        msg = "123123123";
+        confirm = Close;
+        ImGui::OpenPopup("Warn");
+    }
+    ImGui::Text("counter = %d", counter);
+}
+
+
+void Close() {
+    std::cout << "exit" << std::endl;
 }
 
 
 void Draw(int width, int height) {
     auto& style = ImGui::GetStyle();
-    static float f = 0.0f;
-    static int counter = 0;
     //----------------------------
     // 功能窗口渲染
     //----------------------------
@@ -30,32 +49,30 @@ void Draw(int width, int height) {
     // 主窗口渲染
     //----------------------------
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-    ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
-    ImGui::Title("你好");
-    ImGui::Checkbox("Demo Window", &show_demo_window);
-    ImGui::Checkbox("Another Window", &show_another_window);
-    ImGui::PushItemWidth(200.0f);
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
-    ImGui::PopItemWidth();
-    ImGui::ToggleButton("状态", &show_another_window);
-    if (ImGui::Button("Button1")) {
-        counter++;
+    ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
+    // 消息窗口
+    if(ImGui::BeginPopupModal("Warn", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("%s", msg.c_str());
+        ImGui::BeginGroup();
+        if(ImGui::Button("确定", DefaultWidth)){
+            if(confirm != NULL) {
+                confirm();
+                confirm = NULL;
+            }
+            ImGui::CloseCurrentPopup();
+        };
+        ImGui::SameLine();
+        if(ImGui::Button("取消", DefaultWidth)){
+            ImGui::CloseCurrentPopup();
+        };
+        ImGui::EndGroup();
+        ImGui::EndPopup();
     }
-    if (ImGui::PrimaryButton("Button2")) {
-        counter++;
-    }
-    if (ImGui::DangerButton("Button3")) {
-        counter++;
-    }
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
-    if (ImGui::GetWindowPos().x != 0) {
+    Content();
+    if (ImGui::GetWindowPos().y != 0) {
         ImGui::SetWindowSize(ImVec2(width, height));
         ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
     }
     ImGui::End();
     ImGui::PopStyleVar();
-    //----------------------------
-    // 独立窗口渲染
-    //----------------------------
 }
