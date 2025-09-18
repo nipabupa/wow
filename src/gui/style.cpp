@@ -1,6 +1,6 @@
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "app.h"
+#include "style.h"
 
 
 void InitStyle(float scale) {

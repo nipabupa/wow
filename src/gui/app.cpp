@@ -1,29 +1,20 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "spdlog/spdlog.h"
-#include "spdlog/cfg/env.h"
-#include "spdlog/sinks/rotating_file_sink.h"
-#include "app.h"
-#include "utils.h"
+#include "common.h"
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
 #include "implot.h"
 
+// 生命周期Hook
+void InitStyle(float scale);
+void Draw(int width, int height);
+void Close();
 
-// 全局状态初始化
-bool is_loading = false;
-std::string msg;
-void (*confirm)() = NULL; // 是否点击确认回调
-// 日志初始化
-std::shared_ptr<spdlog::logger> logger;
-
-
-static void glfw_error_callback(int error, const char* description)
-{
-    spdlog::error("GLFW Error {} : {}", error, description);
+static void glfw_error_callback(int error, const char* description) {
+    logger->error("GLFW Error {} : {}", error, description);
 }
 
 static void glfw_close_callback(GLFWwindow* window) {
@@ -33,9 +24,7 @@ static void glfw_close_callback(GLFWwindow* window) {
 
 int main(int, char**)
 {
-    spdlog::cfg::load_env_levels("WOW_LOG_LEVEL");
-    // 5MB, Max 5
-    logger = spdlog::rotating_logger_mt("wow_logger", "wow.txt", 1048576 * 5, 5);
+    InitLogger();
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
         return 1;
@@ -63,8 +52,8 @@ int main(int, char**)
     ImGuiIO& io = ImGui::GetIO();
     // 支持键盘控制
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-#ifdef _WIN32
-    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Deng.ttf");
+#ifdef WIN32
+    io.Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\Dengb.ttf");
 #else
     io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc");
 #endif

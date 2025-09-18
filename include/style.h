@@ -1,6 +1,4 @@
-#include <string>
 #include "imgui.h"
-#include "spdlog/spdlog.h"
 
 // 常量
 const float FontBase = 16.0f;
@@ -10,19 +8,10 @@ const ImVec4 PrimaryColor = ImVec4(0.329f, 0.663f, 1.0f, 1.0f);
 const ImVec4 SecondColor = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
 const ImVec4 DangerColor = ImVec4(0.988f, 0.447f, 0.306f, 1.0f);
 const ImVec4 LoadingColor = ImVec4(0.353f, 0.353f, 0.353f, 1.0f);
+const ImU32 RedColor = IM_COL32(255, 0, 0, 255);
+const ImU32 GreenColor = IM_COL32(0, 255, 0, 255);
 const ImVec2 DefaultWidth = ImVec2(FontBase * 6, 0);
 
-// 全局状态
-extern bool is_loading; // 是否显示加载中
-extern std::string msg; // 全局消息
-extern void (*confirm)(); // 是否点击确认回调
-// 日志记录器
-extern std::shared_ptr<spdlog::logger> logger;
-
-// 全局方法
-void InitStyle(float scale);
-void Draw(int width, int height);
-void Close();
 
 // 新增UI方法
 namespace ImGui {

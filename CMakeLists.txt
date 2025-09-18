@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
-# add_definitions(-DWIN32)
+add_definitions(-DWIN32)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
@@ -42,11 +42,14 @@ set(IMGUI_SOURCES
     ${IMPLOT_DIR}/implot_demo.cpp
     ${IMPLOT_DIR}/implot_items.cpp
 )
-# src目录下所有cpp文件
-file(GLOB_RECURSE SOURCES src/*.cpp)
+file(GLOB_RECURSE GUI src/gui/*.cpp)
+file(GLOB_RECURSE COMMON src/common/*.cpp)
+file(GLOB_RECURSE SERVICE src/tests/*.cpp)
+file(GLOB_RECURSE TESTS src/tests/*.cpp)
 # 创建二进制文件
-add_executable(wow ${SOURCES} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
-# 链接GLFW OpenGL
+add_executable(wow ${GUI} ${COMMON} ${SERVICE} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
+add_executable(wow-test ${TESTS} ${COMMON} ${SERVICE})
+# 链接GLFW OPenGL
 if(WIN32)
     target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)
 else()
