@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
-add_definitions(-DWIN32)
+# add_definitions(-DWIN32)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
@@ -48,7 +48,7 @@ file(GLOB_RECURSE SERVICE src/tests/*.cpp)
 file(GLOB_RECURSE TESTS src/tests/*.cpp)
 # 创建二进制文件
 add_executable(wow ${GUI} ${COMMON} ${SERVICE} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
-add_executable(wow-test ${TESTS} ${COMMON} ${SERVICE})
+# add_executable(wow-test ${TESTS} ${COMMON} ${SERVICE})
 # 链接GLFW OPenGL
 if(WIN32)
     target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)

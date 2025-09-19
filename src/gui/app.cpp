@@ -1,3 +1,4 @@
+#include <functional>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -7,23 +8,48 @@
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
 #include "implot.h"
-
-// 生命周期Hook
-void InitStyle(float scale);
-void Draw(int width, int height);
-void Close();
-
+#include "gui.h"
+//----------------------------
+// 全局状态初始化
+//----------------------------
+namespace State {
+    // 缩放
+    float scale = 0;
+    // 实时窗口尺寸
+    int width = 1280;
+    int height = 800;
+    // 后台任务运行状态
+    TaskState backend_task_state = READY;
+    // 全局任务运行状态
+    TaskState global_task_state = READY;
+    // 全局消息状态
+    TaskState global_msg_state = READY;
+    // 消息窗口内容
+    std::string msg;
+    // 消息窗口确认回调
+    std::function<void()> confirm = NULL;
+    // 是否有任务运行
+    bool IsRunning() {
+        return backend_task_state != READY || global_task_state != READY;
+    }
+}
+//----------------------------
+// 窗口异常回调
+//----------------------------
 static void glfw_error_callback(int error, const char* description) {
     logger->error("GLFW Error {} : {}", error, description);
 }
-
+//----------------------------
+// 可选-窗口关闭回调
+//----------------------------
 static void glfw_close_callback(GLFWwindow* window) {
     Close();
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
-
-int main(int, char**)
-{
+//----------------------------
+// APP入口
+//----------------------------
+int main(int, char**) {
     InitLogger();
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
@@ -35,10 +61,10 @@ int main(int, char**)
     glfwWindowHint(GLFW_MAXIMIZED, 0);
     glfwWindowHint(GLFW_RESIZABLE, 0);
     // 创建上下文
-    float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    int display_w = (int)(800 * main_scale);
-    int display_h = (int)(600 * main_scale);
-    GLFWwindow* window = glfwCreateWindow(display_w, display_h, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+    State::scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+    State::width = (int)(State::width * State::scale);
+    State::height = (int)(State::height * State::scale);
+    GLFWwindow* window = glfwCreateWindow(State::width, State::height, "WOW", nullptr, nullptr);
     if (window == nullptr) {
         return 1;
     }
@@ -58,7 +84,7 @@ int main(int, char**)
     io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc");
 #endif
     // 缩放
-    InitStyle(main_scale);
+    InitStyle();
     // 初始化后端GLFW与OpenGL
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -77,11 +103,11 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // draw
-        Draw(display_w, display_h);
+        Draw();
         // Rendering
         ImGui::Render();
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        glfwGetFramebufferSize(window, &State::width, &State::height);
+        glViewport(0, 0, State::width, State::height);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

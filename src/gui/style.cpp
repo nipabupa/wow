@@ -1,20 +1,21 @@
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "style.h"
+#include "gui.h"
 
 
-void InitStyle(float scale) {
+void InitStyle() {
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FontScaleDpi = scale;
-    // style.FontScaleMain = scale;
-    style.FontSizeBase = FontBase;
+    style.FontScaleDpi = State::scale;
+    style.FontSizeBase = Style::FontBase;
     // size
     style.WindowPadding = ImVec2(style.FontSizeBase, style.FontSizeBase);
     style.WindowBorderSize = 1.0f;
     style.WindowRounding = style.FontSizeBase / 2;
     style.ScrollbarSize = style.FontSizeBase / 2;
     style.ScrollbarRounding = style.FontSizeBase / 4;
+    style.ChildRounding = style.FontSizeBase / 2;
+    style.PopupRounding = style.FontSizeBase / 2;
     style.GrabRounding = style.FontSizeBase / 4;
     style.ItemSpacing = ImVec2(style.FontSizeBase, style.FontSizeBase);
     style.ItemInnerSpacing = ImVec2(style.FontSizeBase / 2, 0);
@@ -26,8 +27,8 @@ void InitStyle(float scale) {
     style.CellPadding = ImVec2(style.FontSizeBase / 2, style.FontSizeBase / 4);
     // color
     auto colors = style.Colors;
-    colors[ImGuiCol_WindowBg] = BackgroundColor;
-    colors[ImGuiCol_ChildBg] = CardColor;
+    colors[ImGuiCol_WindowBg] = Style::BackgroundColor;
+    colors[ImGuiCol_ChildBg] = Style::CardColor;
     colors[ImGuiCol_Border] = ImVec4(0.153f, 0.153f, 0.153f, 1.0f);
     colors[ImGuiCol_Text] = ImVec4(0.808f, 0.808f, 0.808f, 1.0f);
     colors[ImGuiCol_TextSelectedBg] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
@@ -40,7 +41,7 @@ void InitStyle(float scale) {
     colors[ImGuiCol_ButtonHovered] = ImVec4(0.271f, 0.271f, 0.282f, 1.0f);
     colors[ImGuiCol_CheckMark] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.125f, 0.125f, 0.125f, 0.5f);
-    style.ScaleAllSizes(scale);
+    style.ScaleAllSizes(State::scale);
 }
 
 
@@ -52,14 +53,14 @@ namespace ImGui {
     }
 
     bool PrimaryButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, PrimaryColor);
+        ImGui::PushStyleColor(ImGuiCol_Text, Style::PrimaryColor);
         auto state = ImGui::Button(label, size);
         ImGui::PopStyleColor();
         return state;
     }
 
     bool DangerButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, DangerColor);
+        ImGui::PushStyleColor(ImGuiCol_Text, Style::DangerColor);
         auto state = ImGui::Button(label, size);
         ImGui::PopStyleColor();
         return state;
@@ -153,9 +154,9 @@ namespace ImGui {
         }
         ImU32 col_bg;
         if (ImGui::IsItemHovered())
-            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], SecondColor, t));
+            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], Style::SecondColor, t));
         else
-            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], PrimaryColor, t));
+            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], Style::PrimaryColor, t));
         draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
         draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
         ImGui::SameLine();
@@ -164,7 +165,7 @@ namespace ImGui {
         ImGui::EndGroup();
     }
 
-    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags) {
+    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags, int width) {
         if (ImGui::BeginCombo(label, items[index], flags)) {
             for (int n = 0; n < size; n++) {
                 const bool is_selected = (index == n);
