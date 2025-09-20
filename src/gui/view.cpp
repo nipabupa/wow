@@ -1,8 +1,10 @@
 #include "imgui.h"
+#include "imfilebrowser.h"
 #include "gui.h"
 #include "common.h"
 #include <chrono>
 #include <cstdlib>
+#include <iostream>
 #include <string>
 #include <thread>
 //----------------------------
@@ -14,17 +16,23 @@ void Close() {
 void Hello() {
     std::this_thread::sleep_for(std::chrono::seconds(5));
 }
+ImGui::FileBrowser fileDialog;
 //----------------------------
 // 主画面内容
 //----------------------------
 const char* items[] = {"111", "222", "333"};
 void DrawContent() {
+    fileDialog.Display();
+    if(fileDialog.HasSelected()) {
+        std::cout << fileDialog.GetSelected() << std::endl;
+        fileDialog.ClearSelected();
+    }
     static float f = 0.0f;
     static short index = 0;
     static bool state;
     ImGui::Title("WOW: Dear ImGui 桌面APP框架");
     // 基础组件
-    ImGui::TextColored(Style::DangerColor, "%s", "基础组件");
+    ImGui::Section("基础组件");
     ImGui::BeginGroup();
     ImGui::Checkbox("形状", &state);
     ImGui::SameLine();
@@ -35,11 +43,11 @@ void DrawContent() {
     ImGui::PopItemWidth();
     ImGui::SameLine();
     ImGui::PushItemWidth(200.0f);
-    ImGui::CustomCombo("选择", items, 3, index);
+    ImGui::CustomCombo("选择", items, 3, index, NULL);
     ImGui::PopItemWidth();
     ImGui::EndGroup();
 
-    ImGui::TextColored(Style::DangerColor, "%s", "按钮&回调");
+    ImGui::Section("按钮&回调");
     static int counter = 0;
     ImGui::BeginGroup();
     if (ImGui::PrimaryButton("数据绑定")) {
@@ -49,7 +57,7 @@ void DrawContent() {
     ImGui::Text("counter = %d", counter);
     ImGui::EndGroup();
 
-    ImGui::TextColored(Style::DangerColor, "%s", "输入组件");
+    ImGui::Section("输入组件");
     // 输入组件
     static int num1 = 0;
     static float num2 = 0;
@@ -75,24 +83,43 @@ void DrawContent() {
     ImGui::PopItemWidth();
     ImGui::EndGroup();
     // 任务类
-    ImGui::TextColored(Style::DangerColor, "%s", "前后台任务");
+    ImGui::Section("前后台任务");
     ImGui::BeginGroup();
-    ImGui::PushItemWidth(200.0f);
-    if(ImGui::PrimaryButton("前台任务")) {
+    if(ImGui::Button("前台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
         TaskManager::CreateGlobalTask("前台任务", Hello);
     }
     ImGui::SameLine();
-    if(ImGui::PrimaryButton("后台任务")) {
+    if(ImGui::Button("后台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
         TaskManager::CreateBackendTask("后台任务", Hello);
     }
     ImGui::SameLine();
-    if(ImGui::PrimaryButton("消息窗口")) {
+    if(ImGui::Button("消息窗口", ImVec2(ImGui::GetFontSize() * 6, 0))) {
+        std::cout << 123;
         TaskManager::Message("消息窗口");
     }
-    ImGui::PopItemWidth();
+    ImGui::SameLine();
+    if(ImGui::Button("选择单个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        fileDialog.SetFlags(0);
+        fileDialog.Open();
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("选择多个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        fileDialog.SetFlags(ImGuiFileBrowserFlags_MultipleSelection);
+        fileDialog.Open();
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        fileDialog.SetFlags(ImGuiFileBrowserFlags_SelectDirectory);
+        fileDialog.Open();
+    }
+    ImGui::SameLine();
+    if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        fileDialog.SetFlags(ImGuiFileBrowserFlags_EnterNewFilename);
+        fileDialog.Open();
+    }
     ImGui::EndGroup();
     // 表格
-    ImGui::TextColored(Style::DangerColor, "%s", "表格");
+    ImGui::Section("表格");
     if(ImGui::BeginTable("table", 5, ImGuiTableFlags_Borders)) {
         ImGui::TableSetupColumn("One");
         ImGui::TableSetupColumn("Two");
@@ -112,7 +139,7 @@ void DrawContent() {
         ImGui::EndTable();
     }
     // 子窗口
-    ImGui::TextColored(Style::DangerColor, "%s", "子窗口");
+    ImGui::Section("子窗口");
     ImGui::BeginChild("Child", ImVec2(0, 0), ImGuiChildFlags_AlwaysUseWindowPadding);
     ImGui::BeginGroup();
     ImGui::Checkbox("形状##1", &state);
@@ -126,6 +153,7 @@ void DrawContent() {
     ImGui::EndChild();
 }
 
+bool another_dialog = false;
 
 void DrawWindow() {
     auto style = ImGui::GetStyle();
@@ -136,6 +164,15 @@ void DrawWindow() {
         ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
         ImGui::Spinner("Spinner", style.FontSizeBase, 6, Style::LoadingColor);
         ImGui::SetWindowPos(ImVec2(State::width - ImGui::GetWindowSize().x - style.WindowPadding.x, 0));
+        ImGui::End();
+    }
+    static bool state;
+    // ImGui::ShowDemoWindow(&state);
+    if(another_dialog) {
+        ImGui::Begin("Demo", &another_dialog, ImGuiWindowFlags_NoCollapse); 
+        ImGui::Checkbox("形状##1", &state);
+        ImGui::SameLine();
+        ImGui::ToggleButton("圆形", &state, "方形");
         ImGui::End();
     }
 }
@@ -174,7 +211,7 @@ void DrawPopup() {
         case State::RUNNING:
             break;
         case State::START:
-            if(ImGui::BeginPopupModal("Message", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            if(ImGui::BeginPopupModal("注意", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("%s", State::msg.c_str());
                 ImGui::BeginGroup();
                 if(ImGui::Button("确定", ImVec2(style.FontSizeBase * State::scale * 6, 0))){
@@ -195,7 +232,7 @@ void DrawPopup() {
                 ImGui::EndGroup();
                 ImGui::EndPopup();
             }
-            ImGui::OpenPopup("Message");
+            ImGui::OpenPopup("注意");
             break;
     }
 }
@@ -206,9 +243,9 @@ void Draw() {
     // 主窗口渲染
     //----------------------------
     DrawWindow();
+    DrawPopup();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
     ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
-    DrawPopup();
     DrawContent();
     if (ImGui::GetWindowPos().y != 0) {
         ImGui::SetWindowSize(ImVec2(State::width, State::height));

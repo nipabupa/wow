@@ -1,30 +1,8 @@
 #include "common.h"
-#include <vector>
-
-#ifdef WIN32
-#include <commdlg.h>
-// 选择单个文件
-void FileManager::SelectFile() {
-
-}
-
-// 选择多个文件
-void FileManager::SelectFiles() {
-
-}
-
-// 选择目录
-void FileManager::SelectDirectory() {
-
-}
-
-// 保存文件
-void FileManager::SaveFile() {
-
-}
-#else
+#include <iostream>
 // 选择单个文件
 std::string FileManager::SelectFile() {
+    std::cout << "Selected filename" << std::endl;
     return "";
 }
 
@@ -43,4 +21,3 @@ std::string FileManager::SelectDirectory() {
 std::string FileManager::SaveFile() {
     return "";
 }
-#endif

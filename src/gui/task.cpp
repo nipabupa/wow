@@ -34,12 +34,20 @@ namespace TaskManager {
     }
 
     void CreateBackendTask(const char* title, std::function<void()> task) {
+        if(State::IsRunning()) {
+            Message("任务正在运行, 请稍候");
+            return;
+        }
         State::backend_task_state = State::RUNNING;
         std::thread t(std::bind(InnerBackendTask, title, task));
         t.detach();
     }
 
     void CreateGlobalTask(const char* title, std::function<void()> task) {
+        if(State::IsRunning()) {
+            Message("任务正在运行, 请稍候");
+            return;
+        }
         State::global_task_state = State::START;
         std::thread t(std::bind(InnerGlobalTask, title, task));
         t.detach();

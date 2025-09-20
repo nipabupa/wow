@@ -30,7 +30,7 @@ void InitStyle() {
     colors[ImGuiCol_WindowBg] = Style::BackgroundColor;
     colors[ImGuiCol_ChildBg] = Style::CardColor;
     colors[ImGuiCol_Border] = ImVec4(0.153f, 0.153f, 0.153f, 1.0f);
-    colors[ImGuiCol_Text] = ImVec4(0.808f, 0.808f, 0.808f, 1.0f);
+    colors[ImGuiCol_Text] = Style::TextColor;
     colors[ImGuiCol_TextSelectedBg] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.463f, 0.463f, 0.463f, 1.0f);
     colors[ImGuiCol_FrameBg] = ImVec4(0.192f, 0.192f, 0.208f, 1.0f);
@@ -40,15 +40,22 @@ void InitStyle() {
     colors[ImGuiCol_ButtonActive] = ImVec4(0.231f, 0.231f, 0.243f, 1.0f);
     colors[ImGuiCol_ButtonHovered] = ImVec4(0.271f, 0.271f, 0.282f, 1.0f);
     colors[ImGuiCol_CheckMark] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
-    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.125f, 0.125f, 0.125f, 0.5f);
+    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.105f, 0.105f, 0.105f, 0.8f);
+    colors[ImGuiCol_PopupBg] = Style::CardColor;
     style.ScaleAllSizes(State::scale);
 }
 
 
 namespace ImGui {
-    void Title(const char* label) {
+    void Title(const char* label, const ImVec4& color) {
         ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 8);
-        ImGui::Text("%s", label);
+        ImGui::TextColored(color, "%s", label);
+        ImGui::PopFont();
+    }
+
+    void Section(const char* label, const ImVec4& color) {
+        ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 4);
+        ImGui::TextColored(color, "%s", label);
         ImGui::PopFont();
     }
 
@@ -165,7 +172,7 @@ namespace ImGui {
         ImGui::EndGroup();
     }
 
-    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags, int width) {
+    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags) {
         if (ImGui::BeginCombo(label, items[index], flags)) {
             for (int n = 0; n < size; n++) {
                 const bool is_selected = (index == n);

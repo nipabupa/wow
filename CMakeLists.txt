@@ -17,12 +17,14 @@ set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
 set(IMPLOT_DIR ${PROJECT_SOURCE_DIR}/lib/implot)
 set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
 set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
+set(filebrowser ${PROJECT_SOURCE_DIR}/lib/imgui-filebrowser)
 # 头文件
 include_directories(
     ${GLFW_DIR}/include
     ${SPDLOG_DIR}/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
+    ${filebrowser}
     ${IMPLOT_DIR}
     ${PROJECT_SOURCE_DIR}/include
 )
