@@ -1,5 +1,4 @@
 #include "imgui.h"
-#include "imfilebrowser.h"
 #include "gui.h"
 #include "common.h"
 #include <chrono>
@@ -16,17 +15,11 @@ void Close() {
 void Hello() {
     std::this_thread::sleep_for(std::chrono::seconds(5));
 }
-ImGui::FileBrowser fileDialog;
 //----------------------------
 // 主画面内容
 //----------------------------
 const char* items[] = {"111", "222", "333"};
 void DrawContent() {
-    fileDialog.Display();
-    if(fileDialog.HasSelected()) {
-        std::cout << fileDialog.GetSelected() << std::endl;
-        fileDialog.ClearSelected();
-    }
     static float f = 0.0f;
     static short index = 0;
     static bool state;
@@ -99,23 +92,15 @@ void DrawContent() {
     }
     ImGui::SameLine();
     if(ImGui::Button("选择单个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        fileDialog.SetFlags(0);
-        fileDialog.Open();
     }
     ImGui::SameLine();
     if(ImGui::Button("选择多个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        fileDialog.SetFlags(ImGuiFileBrowserFlags_MultipleSelection);
-        fileDialog.Open();
     }
     ImGui::SameLine();
     if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        fileDialog.SetFlags(ImGuiFileBrowserFlags_SelectDirectory);
-        fileDialog.Open();
     }
     ImGui::SameLine();
     if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        fileDialog.SetFlags(ImGuiFileBrowserFlags_EnterNewFilename);
-        fileDialog.Open();
     }
     ImGui::EndGroup();
     // 表格
@@ -208,8 +193,8 @@ void DrawPopup() {
     switch (State::global_msg_state) {
         case State::READY:
         case State::STOP:
-        case State::RUNNING:
             break;
+        case State::RUNNING:
         case State::START:
             if(ImGui::BeginPopupModal("注意", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
                 ImGui::Text("%s", State::msg.c_str());
@@ -232,7 +217,20 @@ void DrawPopup() {
                 ImGui::EndGroup();
                 ImGui::EndPopup();
             }
-            ImGui::OpenPopup("注意");
+            if(State::global_msg_state == State::START) {
+                ImGui::OpenPopup("注意");
+                State::global_msg_state = State::RUNNING;
+            }
+            break;
+    }
+    //----------------------------
+    // 文件窗口
+    //----------------------------
+    switch (State::global_msg_state) {
+        case State::READY:
+        case State::STOP:
+        case State::RUNNING:
+        case State::START:
             break;
     }
 }

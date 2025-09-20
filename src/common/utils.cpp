@@ -1,8 +1,6 @@
 #include "common.h"
-#include <iostream>
 // 选择单个文件
 std::string FileManager::SelectFile() {
-    std::cout << "Selected filename" << std::endl;
     return "";
 }
 

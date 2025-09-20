@@ -24,6 +24,8 @@ namespace State {
     TaskState global_task_state = READY;
     // 全局消息状态
     TaskState global_msg_state = READY;
+    // 全局文件选择状态
+    TaskState global_file_state = READY;
     // 消息窗口内容
     std::string msg;
     // 消息窗口确认回调

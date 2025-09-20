@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
-# add_definitions(-DWIN32)
+add_definitions(-DWIN32 -D_WIN32)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
@@ -17,7 +17,6 @@ set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
 set(IMPLOT_DIR ${PROJECT_SOURCE_DIR}/lib/implot)
 set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
 set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
-set(filebrowser ${PROJECT_SOURCE_DIR}/lib/imgui-filebrowser)
 # 头文件
 include_directories(
     ${GLFW_DIR}/include

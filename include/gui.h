@@ -1,7 +1,6 @@
 #include <functional>
 #include <string>
 #include "imgui.h"
-#include "imfilebrowser.h"
 //----------------------------
 // 风格常量
 //----------------------------
@@ -45,6 +44,8 @@ namespace State {
     extern TaskState global_task_state;
     // 全局消息状态
     extern TaskState global_msg_state;
+    // 全局文件选择状态
+    extern TaskState global_file_state;
     // 消息窗口内容
     extern std::string msg;
     // 消息窗口确认回调

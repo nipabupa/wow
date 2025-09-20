@@ -1,12 +1,10 @@
 #include "spdlog/spdlog.h"
 #include "imgui.h"
-#include "imfilebrowser.h"
 #include <string>
 #include <vector>
 
 // 全局日志记录器
 extern std::shared_ptr<spdlog::logger> logger;
-extern ImGui::FileBrowser fileDialog;
 
 // 初始化日志记录器
 void InitLogger();
