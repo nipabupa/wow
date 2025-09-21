@@ -91,10 +91,6 @@ int main(int, char**) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
-
-    fileDialog.SetTitle("你好");
-    fileDialog.SetTypeFilters({ ".h", ".cpp", ".*" });
-
     // Main loop
     while (!glfwWindowShouldClose(window))
     {

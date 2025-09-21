@@ -189,4 +189,9 @@ namespace ImGui {
             ImGui::EndCombo();
         }
     }
+
+    void FileDialog() {
+        ImGui::Begin();
+        ImGui::End();
+    }
 }
