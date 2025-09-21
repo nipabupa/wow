@@ -18,6 +18,7 @@ void Hello() {
 // 主画面内容
 //----------------------------
 const char* items[] = {"111", "222", "333"};
+FileDialog filedialog;
 void DrawContent() {
     static float f = 0.0f;
     static short index = 0;
@@ -96,11 +97,11 @@ void DrawContent() {
     }
     ImGui::SameLine();
     if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        ImGui::GetFileName();
+        filedialog.GetFileName();
     }
     ImGui::SameLine();
     if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        ImGui::OpenPopup("文件选择");
+        filedialog.Open();
     }
     ImGui::EndGroup();
     // 表格
@@ -152,7 +153,7 @@ void DrawWindow() {
         ImGui::End();
     }
     static bool state;
-    // ImGui::ShowDemoWindow(&state);
+    ImGui::ShowDebugLogWindow(&state);
     if(another_dialog) {
         ImGui::Begin("Demo", &another_dialog, ImGuiWindowFlags_NoCollapse); 
         ImGui::Checkbox("形状##1", &state);
@@ -160,6 +161,7 @@ void DrawWindow() {
         ImGui::ToggleButton("圆形", &state, "方形");
         ImGui::End();
     }
+    filedialog.Display();
 }
 
 
@@ -244,7 +246,6 @@ void Draw() {
     DrawPopup();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
     ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
-    ImGui::FileDialog();
     DrawContent();
     if (ImGui::GetWindowPos().y != 0) {
         ImGui::SetWindowSize(ImVec2(State::width, State::height));

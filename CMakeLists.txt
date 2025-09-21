@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
-# add_definitions(-DWIN32 -D_WIN32)
+add_definitions(-DWIN32 -D_WIN32)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
