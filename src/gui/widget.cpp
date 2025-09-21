@@ -1,6 +1,12 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "gui.h"
+#include <algorithm>
+#include <cstring>
+#include <filesystem>
+#include <format>
+#include <iostream>
+#include <vector>
 
 
 void InitStyle() {
@@ -48,28 +54,28 @@ void InitStyle() {
 
 namespace ImGui {
     void Title(const char* label, const ImVec4& color) {
-        ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 8);
-        ImGui::TextColored(color, "%s", label);
-        ImGui::PopFont();
+        PushFont(NULL, GetStyle().FontSizeBase + 8);
+        TextColored(color, "%s", label);
+        PopFont();
     }
 
     void Section(const char* label, const ImVec4& color) {
-        ImGui::PushFont(NULL, ImGui::GetStyle().FontSizeBase + 4);
-        ImGui::TextColored(color, "%s", label);
-        ImGui::PopFont();
+        PushFont(NULL, GetStyle().FontSizeBase + 4);
+        TextColored(color, "%s", label);
+        PopFont();
     }
 
     bool PrimaryButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, Style::PrimaryColor);
-        auto state = ImGui::Button(label, size);
-        ImGui::PopStyleColor();
+        PushStyleColor(ImGuiCol_Text, Style::PrimaryColor);
+        auto state = Button(label, size);
+        PopStyleColor();
         return state;
     }
 
     bool DangerButton(const char* label, const ImVec2& size) {
-        ImGui::PushStyleColor(ImGuiCol_Text, Style::DangerColor);
-        auto state = ImGui::Button(label, size);
-        ImGui::PopStyleColor();
+        PushStyleColor(ImGuiCol_Text, Style::DangerColor);
+        auto state = Button(label, size);
+        PopStyleColor();
         return state;
     }
 
@@ -139,19 +145,19 @@ namespace ImGui {
     }
 
     void ToggleButton(const char* str_id, bool* v, const char* other_label) {
-        auto style = ImGui::GetStyle();
-        ImGui::BeginGroup();
-        ImGui::AlignTextToFramePadding(); 
-        ImGui::PushStyleVarX(ImGuiStyleVar_ItemSpacing, style.FontSizeBase / 2);
-        ImGui::TextUnformatted(other_label);
-        ImGui::SameLine();
-        ImVec2 p = ImGui::GetCursorScreenPos();
-        ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        float height = ImGui::GetFrameHeight();
+        auto style = GetStyle();
+        BeginGroup();
+        AlignTextToFramePadding(); 
+        PushStyleVarX(ImGuiStyleVar_ItemSpacing, style.FontSizeBase / 2);
+        TextUnformatted(other_label);
+        SameLine();
+        ImVec2 p = GetCursorScreenPos();
+        ImDrawList* draw_list = GetWindowDrawList();
+        float height = GetFrameHeight();
         float width = height * 1.55f;
         float radius = height * 0.50f;
-        ImGui::InvisibleButton(str_id, ImVec2(width, height));
-        if (ImGui::IsItemClicked()) *v = !*v;
+        InvisibleButton(str_id, ImVec2(width, height));
+        if (IsItemClicked()) *v = !*v;
         float t = *v ? 1.0f : 0.0f;
         ImGuiContext& g = *GImGui;
         float ANIM_SPEED = 0.08f;
@@ -160,38 +166,150 @@ namespace ImGui {
             t = *v ? (t_anim) : (1.0f - t_anim);
         }
         ImU32 col_bg;
-        if (ImGui::IsItemHovered())
-            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], Style::SecondColor, t));
+        if (IsItemHovered())
+            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], Style::SecondColor, t));
         else
-            col_bg = ImGui::GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], Style::PrimaryColor, t));
+            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], Style::PrimaryColor, t));
         draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
         draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
-        ImGui::SameLine();
-        ImGui::TextUnformatted(str_id);
-        ImGui::PopStyleVar();
-        ImGui::EndGroup();
+        SameLine();
+        TextUnformatted(str_id);
+        PopStyleVar();
+        EndGroup();
     }
 
     void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags) {
-        if (ImGui::BeginCombo(label, items[index], flags)) {
+        if (BeginCombo(label, items[index], flags)) {
             for (int n = 0; n < size; n++) {
                 const bool is_selected = (index == n);
-                if (ImGui::Selectable(items[n], is_selected)) {
+                if (Selectable(items[n], is_selected)) {
                     index = n;
                     if (callback != NULL) {
                         callback();
                     }
                 }
                 if (is_selected) {
-                    ImGui::SetItemDefaultFocus();
+                    SetItemDefaultFocus();
                 }
             }
-            ImGui::EndCombo();
+            EndCombo();
         }
     }
 
+    //----------------------------
+    // 文件选择窗口
+    //----------------------------
+    static char file_directory[256];
+    static char file_name[256];
+    struct FileInfo {
+        char filename[256];
+        bool is_directory;
+        bool is_checked;
+    };
+    static std::vector<FileInfo> fileinfo_list;
+    bool _compare(FileInfo a, FileInfo b) {
+        if(a.is_directory && !b.is_directory) {
+            return true;
+        }
+        if(!a.is_directory && b.is_directory) {
+            return false;
+        }
+        return std::strcmp(a.filename, b.filename) == -1;
+    }
+
+    void _UpdateFileInfo(const char* dirname) {
+        std::strcpy(file_directory, dirname);
+        fileinfo_list.clear();
+        for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
+            FileInfo tmp;
+            std::strcpy(tmp.filename, entry.path().filename().c_str());
+            tmp.is_checked = false;
+            tmp.is_directory = entry.is_directory();
+            fileinfo_list.push_back(tmp);
+        }
+        std::sort(fileinfo_list.begin(), fileinfo_list.end(), _compare);
+    }
+
     void FileDialog() {
-        ImGui::Begin();
-        ImGui::End();
+        if(fileinfo_list.size() <= 0) {
+            _UpdateFileInfo("/home");
+        }
+        if(BeginPopupModal("文件选择", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
+            // 当前目录
+            BeginGroup();
+            if(PrimaryButton("确定##FileDialog")) {
+                GetFileName();
+                CloseCurrentPopup();
+            }
+            SameLine();
+            if(Button("上一级")) {
+                std::filesystem::path tmp = file_directory;
+                _UpdateFileInfo(tmp.parent_path().c_str());
+            }
+            SameLine();
+            TextColored(Style::PrimaryColor, "当前目录: %s", file_directory);
+            EndGroup();
+            // 输入
+            PushItemWidth(200);
+            InputText("输入文件名", file_name, 256);
+            PopItemWidth();
+            // 内容
+            BeginGroup();
+            {
+                BeginGroup();
+                if(Button("Home##0", ImVec2(GetFontSize() * 6, 0))) {
+                    _UpdateFileInfo("/home");
+                };
+                if(Button("桌面##0", ImVec2(GetFontSize() * 6, 0))) {
+                    _UpdateFileInfo("/home/liuzhe");
+                }
+                EndGroup();
+            }
+            SameLine();
+            {
+                PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
+                if(BeginTable("文件信息", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY, ImVec2(600, 300))) {
+                    TableSetupColumn("选择", ImGuiTableColumnFlags_WidthFixed);
+                    TableSetupColumn("文件", ImGuiTableColumnFlags_WidthStretch);
+                    TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed);
+                    TableHeadersRow();
+                    for (auto& fileinfo : fileinfo_list) {
+                        TableNextColumn();
+                        Checkbox(std::format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
+                        TableNextColumn();
+                        if(fileinfo.is_directory) {
+                            TextColored(Style::PrimaryColor, "[D] %s", fileinfo.filename);
+                            TableNextColumn();
+                            if(Button(std::format("进入##{}", fileinfo.filename).c_str())) {
+                                std::filesystem::path tmp = file_directory;
+                                tmp.append(fileinfo.filename);
+                                _UpdateFileInfo(tmp.c_str());
+                            }
+                        } else {
+                            Text("[F] %s", fileinfo.filename);
+                            TableNextColumn();
+                        }
+                    }
+                    EndTable();
+                }
+                PopStyleVar();
+            }
+            EndGroup();
+            EndPopup();
+        }
+    }
+
+    std::string GetFileName() {
+        if(fileinfo_list.empty()) {
+            return "";
+        } else {
+            for (auto fileinfo : fileinfo_list) {
+                if(fileinfo.is_checked) {
+                    std::cout << file_directory << '/' << fileinfo.filename << std::endl;
+                    return fileinfo_list.begin()->filename;
+                }
+            }
+            return "";
+        }
     }
 }

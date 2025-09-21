@@ -3,7 +3,6 @@
 #include "common.h"
 #include <chrono>
 #include <cstdlib>
-#include <iostream>
 #include <string>
 #include <thread>
 //----------------------------
@@ -87,7 +86,6 @@ void DrawContent() {
     }
     ImGui::SameLine();
     if(ImGui::Button("消息窗口", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        std::cout << 123;
         TaskManager::Message("消息窗口");
     }
     ImGui::SameLine();
@@ -98,9 +96,11 @@ void DrawContent() {
     }
     ImGui::SameLine();
     if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        ImGui::GetFileName();
     }
     ImGui::SameLine();
     if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        ImGui::OpenPopup("文件选择");
     }
     ImGui::EndGroup();
     // 表格
@@ -244,6 +244,7 @@ void Draw() {
     DrawPopup();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
     ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::FileDialog();
     DrawContent();
     if (ImGui::GetWindowPos().y != 0) {
         ImGui::SetWindowSize(ImVec2(State::width, State::height));

@@ -1,5 +1,6 @@
 #include <functional>
 #include <string>
+#include <vector>
 #include "imgui.h"
 //----------------------------
 // 风格常量
@@ -65,6 +66,8 @@ namespace ImGui {
     void BufferingBar(const char* label, float value,  const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col);
     void ToggleButton(const char* str_id, bool* v, const char* other_label);
     void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)() = NULL, int flags = ImGuiComboFlags_None);
+    void FileDialog();
+    std::string GetFileName();
 }
 //----------------------------
 // 任务管理
@@ -77,4 +80,3 @@ namespace TaskManager {
     // 创建全局任务
     void CreateGlobalTask(const char* title, std::function<void()> task);
 }
-
