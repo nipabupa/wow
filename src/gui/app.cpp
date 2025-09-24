@@ -1,4 +1,3 @@
-#include <functional>
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -12,28 +11,16 @@
 //----------------------------
 // 全局状态初始化
 //----------------------------
-namespace State {
+namespace App {
     // 缩放
     float scale = 0;
     // 实时窗口尺寸
     int width = 1280;
     int height = 800;
-    // 后台任务运行状态
-    TaskState backend_task_state = READY;
-    // 全局任务运行状态
-    TaskState global_task_state = READY;
-    // 全局消息状态
-    TaskState global_msg_state = READY;
-    // 全局文件选择状态
-    TaskState global_file_state = READY;
-    // 消息窗口内容
-    std::string msg;
-    // 消息窗口确认回调
-    std::function<void()> confirm = NULL;
-    // 是否有任务运行
-    bool IsRunning() {
-        return backend_task_state != READY || global_task_state != READY;
-    }
+    BackendLoading backend_loading;
+    GlobalLoading global_loading;
+    MessageDialog message_dialog;
+    FileDialog file_dialog;
 }
 //----------------------------
 // 窗口异常回调
@@ -63,10 +50,10 @@ int main(int, char**) {
     glfwWindowHint(GLFW_MAXIMIZED, 0);
     glfwWindowHint(GLFW_RESIZABLE, 0);
     // 创建上下文
-    State::scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    State::width = (int)(State::width * State::scale);
-    State::height = (int)(State::height * State::scale);
-    GLFWwindow* window = glfwCreateWindow(State::width, State::height, "WOW", nullptr, nullptr);
+    App::scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+    App::width = (int)(App::width * App::scale);
+    App::height = (int)(App::height * App::scale);
+    GLFWwindow* window = glfwCreateWindow(App::width, App::height, "WOW", nullptr, nullptr);
     if (window == nullptr) {
         return 1;
     }
@@ -108,8 +95,8 @@ int main(int, char**) {
         Draw();
         // Rendering
         ImGui::Render();
-        glfwGetFramebufferSize(window, &State::width, &State::height);
-        glViewport(0, 0, State::width, State::height);
+        glfwGetFramebufferSize(window, &App::width, &App::height);
+        glViewport(0, 0, App::width, App::height);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

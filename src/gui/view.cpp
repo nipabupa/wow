@@ -18,7 +18,6 @@ void Hello() {
 // 主画面内容
 //----------------------------
 const char* items[] = {"111", "222", "333"};
-FileDialog filedialog;
 void DrawContent() {
     static float f = 0.0f;
     static short index = 0;
@@ -79,15 +78,15 @@ void DrawContent() {
     ImGui::Section("前后台任务");
     ImGui::BeginGroup();
     if(ImGui::Button("前台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        TaskManager::CreateGlobalTask("前台任务", Hello);
+        App::CreateGlobalTask("前台任务", Hello);
     }
     ImGui::SameLine();
     if(ImGui::Button("后台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        TaskManager::CreateBackendTask("后台任务", Hello);
+        App::CreateBackendTask("后台任务", Hello);
     }
     ImGui::SameLine();
     if(ImGui::Button("消息窗口", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        TaskManager::Message("消息窗口");
+        App::message_dialog.Open("消息窗口");
     }
     ImGui::SameLine();
     if(ImGui::Button("选择单个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
@@ -97,11 +96,11 @@ void DrawContent() {
     }
     ImGui::SameLine();
     if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        filedialog.GetFileName();
+        App::file_dialog.GetFileName();
     }
     ImGui::SameLine();
     if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        filedialog.Open();
+        App::file_dialog.Open();
     }
     ImGui::EndGroup();
     // 表格
@@ -142,18 +141,14 @@ void DrawContent() {
 bool another_dialog = false;
 
 void DrawWindow() {
-    auto style = ImGui::GetStyle();
+    App::backend_loading.Display();
+    App::global_loading.Display();
+    App::message_dialog.Display();
+    App::file_dialog.Display();
     //----------------------------
-    // 后台加载窗口
+    // 自定义窗口
     //----------------------------
-    if(State::backend_task_state == State::RUNNING) {
-        ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBackground);
-        ImGui::Spinner("Spinner", style.FontSizeBase, 6, Style::LoadingColor);
-        ImGui::SetWindowPos(ImVec2(State::width - ImGui::GetWindowSize().x - style.WindowPadding.x, 0));
-        ImGui::End();
-    }
     static bool state;
-    ImGui::ShowDebugLogWindow(&state);
     if(another_dialog) {
         ImGui::Begin("Demo", &another_dialog, ImGuiWindowFlags_NoCollapse); 
         ImGui::Checkbox("形状##1", &state);
@@ -161,94 +156,18 @@ void DrawWindow() {
         ImGui::ToggleButton("圆形", &state, "方形");
         ImGui::End();
     }
-    filedialog.Display();
 }
-
-
-void DrawPopup() {
-    auto style = ImGui::GetStyle();
-    //----------------------------
-    // 全局加载窗口
-    //----------------------------
-    switch (State::global_task_state) {
-        case State::READY:
-            break;
-        case State::START:
-        case State::STOP:
-        case State::RUNNING:
-            if(ImGui::BeginPopupModal("GlobalLoading", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground)) {
-                ImGui::Spinner("Spinner", style.FontSizeBase, 6, Style::LoadingColor);
-                ImGui::EndPopup();
-            }
-            if(State::global_task_state == State::START) {
-                ImGui::OpenPopup("GlobalLoading");
-                State::global_task_state = State::RUNNING;
-            } else if (State::global_task_state == State::STOP) {
-                ImGui::CloseCurrentPopup();
-                State::global_task_state = State::READY;
-            }
-            break;
-    }
-    //----------------------------
-    // 消息窗口
-    //----------------------------
-    switch (State::global_msg_state) {
-        case State::READY:
-        case State::STOP:
-            break;
-        case State::RUNNING:
-        case State::START:
-            if(ImGui::BeginPopupModal("注意", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-                ImGui::Text("%s", State::msg.c_str());
-                ImGui::BeginGroup();
-                if(ImGui::Button("确定", ImVec2(style.FontSizeBase * State::scale * 6, 0))){
-                    if(State::confirm != NULL) {
-                        State::confirm();
-                        State::confirm = NULL;
-                    }
-                    ImGui::CloseCurrentPopup();
-                    State::global_msg_state = State::READY;
-                };
-                if(State::confirm != NULL) {
-                    ImGui::SameLine();
-                    if(ImGui::Button("取消", ImVec2(style.FontSizeBase * State::scale * 6, 0))){
-                        ImGui::CloseCurrentPopup();
-                        State::global_msg_state = State::READY;
-                    };
-                }
-                ImGui::EndGroup();
-                ImGui::EndPopup();
-            }
-            if(State::global_msg_state == State::START) {
-                ImGui::OpenPopup("注意");
-                State::global_msg_state = State::RUNNING;
-            }
-            break;
-    }
-    //----------------------------
-    // 文件窗口
-    //----------------------------
-    switch (State::global_msg_state) {
-        case State::READY:
-        case State::STOP:
-        case State::RUNNING:
-        case State::START:
-            break;
-    }
-}
-
 
 void Draw() {
     //----------------------------
     // 主窗口渲染
     //----------------------------
     DrawWindow();
-    DrawPopup();
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
     ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
     DrawContent();
     if (ImGui::GetWindowPos().y != 0) {
-        ImGui::SetWindowSize(ImVec2(State::width, State::height));
+        ImGui::SetWindowSize(ImVec2(App::width, App::height));
         ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
     }
     ImGui::End();

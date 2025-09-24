@@ -3,23 +3,13 @@
 #include "gui.h"
 #include <algorithm>
 #include <cstdlib>
-#include <cstring>
 #include <fileapi.h>
-#include <filesystem>
-#include <format>
-#include <iostream>
-#include <iterator>
-#include <string>
-#include <vector>
-#ifdef WIN32
-#include <windows.h>
-#endif
 
 
 void InitStyle() {
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
-    style.FontScaleDpi = State::scale;
+    style.FontScaleDpi = App::scale;
     style.FontSizeBase = Style::FontBase;
     // size
     style.WindowPadding = ImVec2(style.FontSizeBase, style.FontSizeBase);
@@ -55,7 +45,7 @@ void InitStyle() {
     colors[ImGuiCol_CheckMark] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.105f, 0.105f, 0.105f, 0.8f);
     colors[ImGuiCol_PopupBg] = Style::CardColor;
-    style.ScaleAllSizes(State::scale);
+    style.ScaleAllSizes(App::scale);
 }
 
 
@@ -201,159 +191,5 @@ namespace ImGui {
             }
             EndCombo();
         }
-    }
-}
-
-
-bool _compare(FileInfo a, FileInfo b) {
-    if(a.is_directory && !b.is_directory) {
-        return true;
-    }
-    if(!a.is_directory && b.is_directory) {
-        return false;
-    }
-    return std::strcmp(a.filename, b.filename) == -1;
-}
-
-FileDialog::FileDialog() {
-    is_save_file = false;
-    is_directory = false;
-    // auto home = std::getenv("Home");
-    // const_directory.push_back({"Home", home});
-#ifdef WIN32
-    // const_directory.push_back({"桌面", std::format("{}\\Desktop", home)});
-    // char buffer[256];
-    // DWORD length = GetLogicalDriveStringsA(255, buffer);
-    // for(int i=0; i<length; i++) {
-    //     auto tmp = std::format("{}:\\", buffer[i]);
-    //     const_directory.push_back({tmp, tmp});
-    // }
-#else
-    const_directory.push_back({"桌面", std::format("{}/Desktop", home)});
-#endif
-}
-
-void FileDialog::ChangeToSaveFile() {
-    is_save_file = true;
-}
-
-void FileDialog::ChangeToSelectDirectory() {
-    is_directory = true;
-}
-
-void FileDialog::SetFilter(std::vector<std::string> filters) {
-    exts = filters;
-}
-
-void FileDialog::UpdateFileInfo(const char* dirname) {
-    std::strcpy(file_directory, dirname);
-    fileinfo_list.clear();
-    for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
-        if(is_directory && !entry.is_directory()) {
-            continue;
-        }
-        bool flag = false;
-        for (auto filter : exts) {
-            if(entry.path().filename().string().ends_with(filter)) {
-                flag = true;
-            }
-        }
-        if(!flag) {
-            continue;
-        }
-        FileInfo tmp;
-        std::strcpy(tmp.filename, entry.path().filename().string().c_str());
-        tmp.is_checked = false;
-        tmp.is_directory = entry.is_directory();
-        fileinfo_list.push_back(tmp);
-    }
-    std::sort(fileinfo_list.begin(), fileinfo_list.end(), _compare);
-}
-
-void FileDialog::Display() {
-    // if(fileinfo_list.size() <= 0) {
-    //     UpdateFileInfo(std::getenv("Home"));
-    // }
-    if(ImGui::BeginPopupModal("FileDialog", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings)) {
-        // 当前目录
-        ImGui::BeginGroup();
-        if(ImGui::PrimaryButton("确定##FileDialog")) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SameLine();
-        if(ImGui::Button("上一级")) {
-            std::filesystem::path tmp = file_directory;
-            UpdateFileInfo(tmp.parent_path().string().c_str());
-        }
-        ImGui::SameLine();
-        ImGui::TextColored(Style::PrimaryColor, "当前目录: %s", file_directory);
-        ImGui::EndGroup();
-        // 输入
-        if(is_save_file) {
-            ImGui::PushItemWidth(200);
-            ImGui::InputText("输入文件名", file_name, 256);
-            ImGui::PopItemWidth();
-        }
-        // 内容
-        ImGui::BeginGroup();
-        {
-            ImGui::BeginGroup();
-            for(auto p : const_directory) {
-                if(ImGui::Button(std::format("{}##FileDialog", p.first).c_str(), ImVec2(100, 0))) {
-                    UpdateFileInfo(p.second.c_str());
-                };
-            }
-            ImGui::EndGroup();
-        }
-        ImGui::SameLine();
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
-            if(ImGui::BeginTable("文件信息", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY, ImVec2(600, 300))) {
-                ImGui::TableSetupColumn("选择", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableSetupColumn("文件", ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed);
-                ImGui::TableHeadersRow();
-                for (auto& fileinfo : fileinfo_list) {
-                    ImGui::TableNextColumn();
-                    ImGui::Checkbox(std::format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
-                    ImGui::TableNextColumn();
-                    if(fileinfo.is_directory) {
-                        ImGui::TextColored(Style::PrimaryColor, "[D] %s", fileinfo.filename);
-                        ImGui::TableNextColumn();
-                        if(ImGui::Button(std::format("进入##{}", fileinfo.filename).c_str())) {
-                            std::filesystem::path tmp = file_directory;
-                            tmp.append(fileinfo.filename);
-                            UpdateFileInfo(tmp.string().c_str());
-                        }
-                    } else {
-                        ImGui::Text("[F] %s", fileinfo.filename);
-                        ImGui::TableNextColumn();
-                    }
-                }
-                ImGui::EndTable();
-            }
-            ImGui::PopStyleVar();
-        }
-        ImGui::EndGroup();
-        ImGui::EndPopup();
-    }
-}
-
-void FileDialog::Open() {
-    std::cout << 12 << std::endl;
-    ImGui::OpenPopup("FileDialog");
-}
-
-std::string FileDialog::GetFileName() {
-    if(fileinfo_list.empty()) {
-        return "";
-    } else {
-        for (auto fileinfo : fileinfo_list) {
-            if(fileinfo.is_checked) {
-                std::cout << file_directory << '/' << fileinfo.filename << std::endl;
-                return fileinfo_list.begin()->filename;
-            }
-        }
-        return "";
     }
 }

@@ -6,15 +6,15 @@
 #include "common.h"
 
 
-namespace TaskManager {
+namespace App {
     void InnerBackendTask(const char* title, std::function<void()> task) {
         try {
             task();
         } catch (std::exception& e) {
             logger->error(e.what());
-            Message(std::format("{}失败", title));
+            message_dialog.Open(std::format("{}失败", title));
         }
-        State::backend_task_state = State::READY;
+        backend_loading.Stop();
     }
 
     void InnerGlobalTask(const char* title, std::function<void()> task) {
@@ -22,33 +22,27 @@ namespace TaskManager {
             task();
         } catch (std::exception& e) {
             logger->error(e.what());
-            Message(std::format("{}失败", title));
+            message_dialog.Open(std::format("{}失败", title));
         }
-        State::global_task_state = State::STOP;
-    }
-
-    void Message(std::string msg, std::function<void()> task) {
-        State::global_msg_state = State::START;
-        State::msg = msg;
-        State::confirm = task;
+        global_loading.Stop();
     }
 
     void CreateBackendTask(const char* title, std::function<void()> task) {
-        if(State::IsRunning()) {
-            Message("任务正在运行, 请稍候");
+        if(backend_loading.IsRunning() || global_loading.IsRunning()) {
+            message_dialog.Open("任务正在运行, 请稍候");
             return;
         }
-        State::backend_task_state = State::RUNNING;
+        backend_loading.Start();
         std::thread t(std::bind(InnerBackendTask, title, task));
         t.detach();
     }
 
     void CreateGlobalTask(const char* title, std::function<void()> task) {
-        if(State::IsRunning()) {
-            Message("任务正在运行, 请稍候");
+        if(App::backend_loading.IsRunning() || App::global_loading.IsRunning()) {
+            message_dialog.Open("任务正在运行, 请稍候");
             return;
         }
-        State::global_task_state = State::START;
+        global_loading.Start();
         std::thread t(std::bind(InnerGlobalTask, title, task));
         t.detach();
     }

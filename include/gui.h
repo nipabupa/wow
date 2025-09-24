@@ -26,7 +26,7 @@ void Close();
 //----------------------------
 // 全局状态
 //----------------------------
-namespace State {
+namespace App {
     enum TaskState {
         READY,
         START,
@@ -38,20 +38,117 @@ namespace State {
     // 实时窗口尺寸
     extern int width;
     extern int height;
-    // 后台任务运行状态
-    extern TaskState backend_task_state;
-    // 全局任务运行状态
-    extern TaskState global_task_state;
-    // 全局消息状态
-    extern TaskState global_msg_state;
-    // 全局文件选择状态
-    extern TaskState global_file_state;
-    // 消息窗口内容
-    extern std::string msg;
-    // 消息窗口确认回调
-    extern std::function<void()> confirm; // 是否点击确认回调
-    // 是否有任务运行
-    bool IsRunning();
+    //----------------------------
+    // 后台加载
+    //----------------------------
+    class BackendLoading {
+    private:
+        TaskState state;
+    public:
+        BackendLoading() {
+            state = READY;
+        }
+        void Display();
+        bool IsRunning() {
+            return state == RUNNING;
+        }
+        void Start() {
+            state = RUNNING;
+        }
+        void Stop() {
+            state = READY;
+        }
+    };
+    extern BackendLoading backend_loading;
+    //----------------------------
+    // 全局加载
+    //----------------------------
+    class GlobalLoading {
+    private:
+        TaskState state;
+    public:
+        GlobalLoading() {
+            state = READY;
+        }
+        void Display();
+        bool IsRunning() {
+            return state == RUNNING;
+        }
+        void Start() {
+            state = START;
+        }
+        void Stop() {
+            state = STOP;
+        }
+    };
+    extern GlobalLoading global_loading;
+    //----------------------------
+    // 消息通知窗口
+    //----------------------------
+    class MessageDialog {
+    private:
+        // 全局消息状态
+        TaskState state;
+        // 消息窗口内容
+        std::string message;
+        // 消息窗口确认回调
+        std::function<void()> confirm; // 是否点击确认回调
+    public:
+        MessageDialog() {
+            state = READY;
+        }
+        void Display();
+        void Open(std::string msg, std::function<void()> callback = NULL) {
+            message = msg;
+            confirm = callback;
+            state = START;
+        }
+    };
+    extern MessageDialog message_dialog;
+    //----------------------------
+    // 文件选择窗口
+    //----------------------------
+    struct FileInfo {
+        char filename[256];
+        bool is_directory;
+        bool is_checked;
+    };
+    class FileDialog {
+    private:
+        TaskState state;
+        char file_directory[256];
+        char file_name[256];
+        bool is_directory;
+        bool is_save_file;
+        std::vector<std::string> exts;
+        std::vector<FileInfo> fileinfo_list;
+        std::vector<std::pair<std::string, std::string>> const_directory;
+        void UpdateFileInfo(const char* dirname);
+    public:
+        FileDialog();
+        void Display();
+        void Open() {
+            state = START;
+        }
+        std::string GetFileName();
+        void ChangeToSelectDirectory() {
+            is_directory = true;
+        }
+        void ChangeToSaveFile() {
+            is_save_file = true;
+        }
+        void SetFilter(std::vector<std::string> filters) {
+            exts = filters;
+        }
+    };
+    extern FileDialog file_dialog;
+    //----------------------------
+    // 任务管理
+    //----------------------------
+    // 创建后台任务
+    void CreateBackendTask(const char* title, std::function<void()> task);
+    // 创建全局任务
+    void CreateGlobalTask(const char* title, std::function<void()> task);
 }
 //----------------------------
 // 新增ImGui组件
@@ -66,43 +163,3 @@ namespace ImGui {
     void ToggleButton(const char* str_id, bool* v, const char* other_label);
     void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)() = NULL, int flags = ImGuiComboFlags_None);
 }
-//----------------------------
-// 任务管理
-//----------------------------
-namespace TaskManager {
-    // 创建消息
-    void Message(std::string message, std::function<void()> task = NULL);
-    // 创建后台任务
-    void CreateBackendTask(const char* title, std::function<void()> task);
-    // 创建全局任务
-    void CreateGlobalTask(const char* title, std::function<void()> task);
-}
-
-
-//----------------------------
-// 文件选择窗口
-//----------------------------
-struct FileInfo {
-    char filename[256];
-    bool is_directory;
-    bool is_checked;
-};
-class FileDialog {
-    private:
-        char file_directory[256];
-        char file_name[256];
-        bool is_directory;
-        bool is_save_file;
-        std::vector<std::string> exts;
-        std::vector<FileInfo> fileinfo_list;
-        std::vector<std::pair<std::string, std::string>> const_directory;
-        void UpdateFileInfo(const char* dirname);
-    public:
-        FileDialog();
-        void Display();
-        void Open();
-        std::string GetFileName();
-        void ChangeToSelectDirectory();
-        void ChangeToSaveFile();
-        void SetFilter(std::vector<std::string> filters);
-};
