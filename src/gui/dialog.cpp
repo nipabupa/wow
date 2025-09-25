@@ -1,12 +1,6 @@
-#include <cstdlib>
-#include <cstring>
 #include <filesystem>
-#include <format>
-#include <minwindef.h>
-#include <string>
-#include <vector>
-#include <format>
-#include <winerror.h>
+#include <iostream>
+#include "stl.h"
 #include "gui.h"
 #include "imgui.h"
 #ifdef WIN32
@@ -92,12 +86,12 @@ namespace App {
         if(!a.is_directory && b.is_directory) {
             return false;
         }
-        return std::strcmp(a.filename, b.filename) == -1;
+        return a.filename <= b.filename;
     }
 
     FileDialog::FileDialog() {
         is_save_file = false;
-        is_directory = false;
+        is_select_directory = false;
 #ifdef WIN32
         char buffer[256];
         DWORD a = 255;
@@ -107,7 +101,7 @@ namespace App {
         DWORD length = GetLogicalDriveStringsA(255, buffer);
         for(int i=0; i<length; i++) {
             if(buffer[i] >= 'A' && buffer[i] <= 'Z') {
-                auto tmp = std::format("{}:\\", buffer[i]);
+                auto tmp = format("{}:\\", buffer[i]);
                 const_directory.push_back({tmp, tmp});
             }
         }
@@ -118,24 +112,24 @@ namespace App {
 #endif
     }
 
-    void FileDialog::UpdateFileInfo(const char* dirname) {
-        std::strcpy(file_directory, dirname);
+    void FileDialog::UpdateFileInfo(const str& dirname) {
+        file_directory = dirname;
         fileinfo_list.clear();
         for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
-            if(is_directory && !entry.is_directory()) {
+            if(is_select_directory && !entry.is_directory()) {
                 continue;
             }
-            bool flag = false;
-            for (auto filter : exts) {
-                if(entry.path().filename().string().ends_with(filter)) {
-                    flag = true;
-                }
-            }
-            if(!flag) {
-                continue;
-            }
+            // bool flag = false;
+            // for (auto filter : exts) {
+            //     if(entry.path().filename().string().ends_with(filter)) {
+            //         flag = true;
+            //     }
+            // }
+            // if(!flag) {
+            //     continue;
+            // }
             FileInfo tmp;
-            std::strcpy(tmp.filename, entry.path().filename().string().c_str());
+            tmp.filename = entry.path().filename().string();
             tmp.is_checked = false;
             tmp.is_directory = entry.is_directory();
             fileinfo_list.push_back(tmp);
@@ -147,15 +141,22 @@ namespace App {
         if(state == READY || state == STOP) {
             return;
         }
-        if(fileinfo_list.size() <= 0) {
-            UpdateFileInfo("D:\\\\WorkSpace");
+        if(fileinfo_list.size() <= 0 && const_directory.size() > 0) {
+            UpdateFileInfo(const_directory.begin()->second);
         }
         auto font_size = ImGui::GetFontSize();
         ImVec2 button_size = ImVec2(font_size * 6, 0);
-        if(ImGui::BeginPopupModal("FileDialog", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize)) {
+        std::filesystem::path current_path(file_directory);
+        if(ImGui::BeginPopupModal("文件选择##FileDialog", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize)) {
+            ImGui::SetWindowSize(ImVec2(font_size*70, font_size*35));
             // 当前目录
             ImGui::BeginGroup();
             if(ImGui::PrimaryButton("确定##FileDialog", button_size)) {
+                for (auto& name : fileinfo_list) {
+                    if(name.is_checked) {
+                        std::cout << name.filename << std::endl;
+                    }
+                }
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
@@ -165,69 +166,66 @@ namespace App {
             }
             ImGui::SameLine();
             if(ImGui::Button("上一级##FileDialog", button_size)) {
-                std::filesystem::path tmp = file_directory;
-                UpdateFileInfo(tmp.parent_path().string().c_str());
+                str target = current_path.parent_path().string();
+                UpdateFileInfo(target);
             }
             ImGui::SameLine();
-            ImGui::TextColored(Style::PrimaryColor, "当前目录: %s", file_directory);
+            ImGui::TextColored(Style::PrimaryColor, "当前目录: %s", file_directory.c_str());
             ImGui::EndGroup();
             // 输入
-            // if(is_save_file) {
-            //     ImGui::PushItemWidth(200);
-            //     ImGui::InputText("输入文件名##FileDialog", file_name, 256);
-            //     ImGui::PopItemWidth();
-            // }
+            if(is_save_file) {
+                ImGui::PushItemWidth(font_size*40);
+                ImGui::InputText("输入文件名##FileDialog", file_name, 256);
+                ImGui::PopItemWidth();
+            }
             // 内容
             ImGui::BeginGroup();
-            {
-                ImGui::Text("%s", "快捷目录");
-                ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, font_size / 4);
-                for(auto p : const_directory) {
-                    if(ImGui::Button(std::format("{}##FileDialog", p.first).c_str(), ImVec2(100, 0))) {
-                        UpdateFileInfo(p.second.c_str());
-                    };
-                }
-                ImGui::PopStyleVar();
+            ImGui::BeginGroup();
+            ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, font_size / 4);
+            for(auto p : const_directory) {
+                if(ImGui::Button(std::format("{}##FileDialog", p.first).c_str(), ImVec2(100, 0))) {
+                    UpdateFileInfo(p.second);
+                };
             }
+            ImGui::PopStyleVar();
+            ImGui::EndGroup();
             ImGui::SameLine();
-            {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
-                if(ImGui::BeginTable("文件信息", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
-                    ImGui::TableSetupColumn("选择", ImGuiTableColumnFlags_WidthFixed, font_size * 2);
-                    ImGui::TableSetupColumn("文件", ImGuiTableColumnFlags_WidthStretch, font_size * 10);
-                    ImGui::TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed, font_size * 2);
-                    ImGui::TableHeadersRow();
-                    for (auto& fileinfo : fileinfo_list) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
+            if(ImGui::BeginTable("文件信息", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY, ImVec2(-1, -1))) {
+                ImGui::TableSetupColumn("选择", ImGuiTableColumnFlags_WidthFixed, font_size * 2);
+                ImGui::TableSetupColumn("文件", ImGuiTableColumnFlags_WidthStretch, font_size * 10);
+                ImGui::TableSetupColumn("操作", ImGuiTableColumnFlags_WidthFixed, font_size * 2);
+                ImGui::TableHeadersRow();
+                for (auto& fileinfo : fileinfo_list) {
+                    ImGui::TableNextColumn();
+                    ImGui::Checkbox(format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
+                    ImGui::TableNextColumn();
+                    if(fileinfo.is_directory) {
+                        ImGui::TextColored(Style::PrimaryColor, "[目录] %s", fileinfo.filename.c_str());
                         ImGui::TableNextColumn();
-                        ImGui::Checkbox(std::format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
-                        ImGui::TableNextColumn();
-                        if(fileinfo.is_directory) {
-                            ImGui::TextColored(Style::PrimaryColor, "[D] %s", fileinfo.filename);
-                            ImGui::TableNextColumn();
-                            if(ImGui::Button(std::format("进入##{}", fileinfo.filename).c_str())) {
-                                std::filesystem::path tmp = file_directory;
-                                tmp.append(fileinfo.filename);
-                                UpdateFileInfo(tmp.string().c_str());
-                            }
-                        } else {
-                            ImGui::Text("[F] %s", fileinfo.filename);
-                            ImGui::TableNextColumn();
+                        if(ImGui::Button(std::format("进入##{}", fileinfo.filename).c_str())) {
+                            current_path.append(fileinfo.filename);
+                            str tmp = current_path.string();
+                            UpdateFileInfo(tmp);
                         }
+                    } else {
+                        ImGui::Text("[文件] %s", fileinfo.filename.c_str());
+                        ImGui::TableNextColumn();
                     }
-                    ImGui::EndTable();
                 }
-                ImGui::PopStyleVar();
+                ImGui::EndTable();
             }
+            ImGui::PopStyleVar();
             ImGui::EndGroup();
             ImGui::EndPopup();
         }
         if (state == START) {
-            ImGui::OpenPopup("FileDialog");
+            ImGui::OpenPopup("文件选择##FileDialog");
             state = RUNNING;
         }
     }
 
-    std::string FileDialog::GetFileName() {
+    str FileDialog::GetFileName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {

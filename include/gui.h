@@ -1,7 +1,6 @@
-#include <functional>
-#include <string>
+#include "stl.h"
 #include "imgui.h"
-//----------------------------
+//-------------------------
 // 风格常量
 //----------------------------
 namespace Style {
@@ -90,15 +89,15 @@ namespace App {
         // 全局消息状态
         TaskState state;
         // 消息窗口内容
-        std::string message;
+        str message;
         // 消息窗口确认回调
-        std::function<void()> confirm; // 是否点击确认回调
+        func<void()> confirm; // 是否点击确认回调
     public:
         MessageDialog() {
             state = READY;
         }
         void Display();
-        void Open(std::string msg, std::function<void()> callback = NULL) {
+        void Open(const str& msg, func<void()> callback = NULL) {
             message = msg;
             confirm = callback;
             state = START;
@@ -109,35 +108,35 @@ namespace App {
     // 文件选择窗口
     //----------------------------
     struct FileInfo {
-        char filename[256];
+        str filename;
         bool is_directory;
         bool is_checked;
     };
     class FileDialog {
     private:
         TaskState state;
-        char file_directory[256];
+        str file_directory;
         char file_name[256];
-        bool is_directory;
+        bool is_select_directory;
         bool is_save_file;
-        std::vector<std::string> exts;
-        std::vector<FileInfo> fileinfo_list;
-        std::vector<std::pair<std::string, std::string>> const_directory;
-        void UpdateFileInfo(const char* dirname);
+        list<str> exts;
+        list<FileInfo> fileinfo_list;
+        list<std::pair<str, str>> const_directory;
+        void UpdateFileInfo(const str& dirname);
     public:
         FileDialog();
         void Display();
         void Open() {
             state = START;
         }
-        std::string GetFileName();
+        str GetFileName();
         void ChangeToSelectDirectory() {
-            is_directory = true;
+            is_select_directory = true;
         }
         void ChangeToSaveFile() {
             is_save_file = true;
         }
-        void SetFilter(std::vector<std::string> filters) {
+        void SetFilter(const list<str>& filters) {
             exts = filters;
         }
     };
@@ -146,9 +145,9 @@ namespace App {
     // 任务管理
     //----------------------------
     // 创建后台任务
-    void CreateBackendTask(const char* title, std::function<void()> task);
+    void CreateBackendTask(const str& title, func<void()> task);
     // 创建全局任务
-    void CreateGlobalTask(const char* title, std::function<void()> task);
+    void CreateGlobalTask(const str& title, func<void()> task);
 }
 //----------------------------
 // 新增ImGui组件

@@ -1,33 +1,32 @@
-#include <exception>
 #include <format>
-#include <functional>
 #include <thread>
+#include "stl.h"
 #include "gui.h"
 #include "common.h"
 
 
 namespace App {
-    void InnerBackendTask(const char* title, std::function<void()> task) {
+    void InnerBackendTask(const str& title, func<void()> task) {
         try {
             task();
-        } catch (std::exception& e) {
+        } catch (exception& e) {
             logger->error(e.what());
-            message_dialog.Open(std::format("{}失败", title));
+            message_dialog.Open(format("{}失败", title));
         }
         backend_loading.Stop();
     }
 
-    void InnerGlobalTask(const char* title, std::function<void()> task) {
+    void InnerGlobalTask(const str& title, func<void()> task) {
         try {
             task();
-        } catch (std::exception& e) {
+        } catch (exception& e) {
             logger->error(e.what());
-            message_dialog.Open(std::format("{}失败", title));
+            message_dialog.Open(format("{}失败", title));
         }
         global_loading.Stop();
     }
 
-    void CreateBackendTask(const char* title, std::function<void()> task) {
+    void CreateBackendTask(const str& title, func<void()> task) {
         if(backend_loading.IsRunning() || global_loading.IsRunning()) {
             message_dialog.Open("任务正在运行, 请稍候");
             return;
@@ -37,7 +36,7 @@ namespace App {
         t.detach();
     }
 
-    void CreateGlobalTask(const char* title, std::function<void()> task) {
+    void CreateGlobalTask(const str& title, func<void()> task) {
         if(App::backend_loading.IsRunning() || App::global_loading.IsRunning()) {
             message_dialog.Open("任务正在运行, 请稍候");
             return;
