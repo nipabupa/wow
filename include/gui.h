@@ -1,3 +1,5 @@
+#ifndef WOW_GUI
+#define WOW_GUI 1
 #include "stl.h"
 #include "imgui.h"
 //-------------------------
@@ -122,23 +124,20 @@ namespace App {
         list<str> exts;
         list<FileInfo> fileinfo_list;
         list<std::pair<str, str>> const_directory;
+        bool update;
         void UpdateFileInfo(const str& dirname);
     public:
         FileDialog();
         void Display();
-        void Open() {
-            state = START;
-        }
+        void Open();
         str GetFileName();
-        void ChangeToSelectDirectory() {
-            is_select_directory = true;
-        }
-        void ChangeToSaveFile() {
-            is_save_file = true;
-        }
-        void SetFilter(const list<str>& filters) {
-            exts = filters;
-        }
+        list<str> GetFileNames();
+        str GetSaveName();
+        str GetDirName();
+        void ChangeToSelectFiles();
+        void ChangeToSelectDirectory();
+        void ChangeToSaveFile();
+        void SetFilter(const list<str>& filters);
     };
     extern FileDialog file_dialog;
     //----------------------------
@@ -162,3 +161,4 @@ namespace ImGui {
     void ToggleButton(const char* str_id, bool* v, const char* other_label);
     void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)() = NULL, int flags = ImGuiComboFlags_None);
 }
+#endif

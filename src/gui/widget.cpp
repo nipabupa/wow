@@ -1,8 +1,6 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "gui.h"
-#include <cstdlib>
-#include <fileapi.h>
 
 
 void InitStyle() {
@@ -44,6 +42,7 @@ void InitStyle() {
     colors[ImGuiCol_CheckMark] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.105f, 0.105f, 0.105f, 0.8f);
     colors[ImGuiCol_PopupBg] = Style::CardColor;
+    colors[ImGuiCol_ScrollbarBg] = Style::BackgroundColor;
     style.ScaleAllSizes(App::scale);
 }
 

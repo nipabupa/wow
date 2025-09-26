@@ -1,10 +1,7 @@
+#include <chrono>
 #include "imgui.h"
 #include "gui.h"
 #include "common.h"
-#include <chrono>
-#include <cstdlib>
-#include <string>
-#include <thread>
 //----------------------------
 // 主窗口关闭回调
 //----------------------------
@@ -89,17 +86,19 @@ void DrawContent() {
         App::message_dialog.Open("消息窗口");
     }
     ImGui::SameLine();
-    if(ImGui::Button("选择单个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-    }
-    ImGui::SameLine();
-    if(ImGui::Button("选择多个文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+    if(ImGui::Button("选择文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        App::file_dialog.ChangeToSelectFiles();
+        App::file_dialog.SetFilter({"h", "cpp"});
+        App::file_dialog.Open();
     }
     ImGui::SameLine();
     if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        App::file_dialog.GetFileName();
+        App::file_dialog.ChangeToSelectDirectory();
+        App::file_dialog.Open();
     }
     ImGui::SameLine();
     if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
+        App::file_dialog.ChangeToSaveFile();
         App::file_dialog.Open();
     }
     ImGui::EndGroup();

@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DWIN32 -D_WIN32)
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 # 自定义目录
@@ -44,7 +45,7 @@ set(IMGUI_SOURCES
 )
 file(GLOB_RECURSE GUI src/gui/*.cpp)
 file(GLOB_RECURSE COMMON src/common/*.cpp)
-file(GLOB_RECURSE SERVICE src/tests/*.cpp)
+file(GLOB_RECURSE SERVICE src/service/*.cpp)
 file(GLOB_RECURSE TESTS src/tests/*.cpp)
 # 创建二进制文件
 add_executable(wow ${GUI} ${COMMON} ${SERVICE} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
