@@ -1,5 +1,9 @@
-#ifndef WOW_GUI
-#define WOW_GUI 1
+/*********************************
+ *
+ * WOW框架能力
+ *
+ *********************************/
+#pragma once
 #include "stl.h"
 #include "imgui.h"
 //-------------------------
@@ -19,9 +23,8 @@ namespace Style {
     const ImU32 GreenColor = IM_COL32(0, 255, 0, 255);
 }
 //----------------------------
-// 生命周期Hook
+// 生命周期Hook, 需要手动实现
 //----------------------------
-void InitStyle();
 void Draw();
 void Close();
 //----------------------------
@@ -91,15 +94,15 @@ namespace App {
         // 全局消息状态
         TaskState state;
         // 消息窗口内容
-        str message;
+        string message;
         // 消息窗口确认回调
-        func<void()> confirm; // 是否点击确认回调
+        function<void()> confirm; // 是否点击确认回调
     public:
         MessageDialog() {
             state = READY;
         }
         void Display();
-        void Open(const str& msg, func<void()> callback = NULL) {
+        void Open(const string& msg, function<void()> callback = NULL) {
             message = msg;
             confirm = callback;
             state = START;
@@ -110,43 +113,43 @@ namespace App {
     // 文件选择窗口
     //----------------------------
     struct FileInfo {
-        str filename;
+        string filename;
         bool is_directory;
         bool is_checked;
     };
     class FileDialog {
     private:
         TaskState state;
-        str file_directory;
+        string file_directory;
         char file_name[256];
         bool is_select_directory;
         bool is_save_file;
-        list<str> exts;
+        list<string> exts;
         list<FileInfo> fileinfo_list;
-        list<std::pair<str, str>> const_directory;
+        list<std::pair<string, string>> const_directory;
         bool update;
-        void UpdateFileInfo(const str& dirname);
+        void UpdateFileInfo(const string& dirname);
     public:
         FileDialog();
         void Display();
         void Open();
-        str GetFileName();
-        list<str> GetFileNames();
-        str GetSaveName();
-        str GetDirName();
+        string GetFileName();
+        list<string> GetFileNames();
+        string GetSaveName();
+        string GetDirName();
         void ChangeToSelectFiles();
         void ChangeToSelectDirectory();
         void ChangeToSaveFile();
-        void SetFilter(const list<str>& filters);
+        void SetFilter(const list<string>& filters);
     };
     extern FileDialog file_dialog;
     //----------------------------
     // 任务管理
     //----------------------------
     // 创建后台任务
-    void CreateBackendTask(const str& title, func<void()> task);
+    void CreateBackendTask(const string& title, function<void()> task);
     // 创建全局任务
-    void CreateGlobalTask(const str& title, func<void()> task);
+    void CreateGlobalTask(const string& title, function<void()> task);
 }
 //----------------------------
 // 新增ImGui组件
@@ -161,4 +164,3 @@ namespace ImGui {
     void ToggleButton(const char* str_id, bool* v, const char* other_label);
     void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)() = NULL, int flags = ImGuiComboFlags_None);
 }
-#endif

@@ -43,13 +43,11 @@ set(IMGUI_SOURCES
     # ${IMPLOT_DIR}/implot_demo.cpp
     ${IMPLOT_DIR}/implot_items.cpp
 )
-file(GLOB_RECURSE GUI src/gui/*.cpp)
+file(GLOB_RECURSE WOW src/wow/*.cpp)
 file(GLOB_RECURSE COMMON src/common/*.cpp)
-file(GLOB_RECURSE SERVICE src/service/*.cpp)
-file(GLOB_RECURSE TESTS src/tests/*.cpp)
+file(GLOB_RECURSE SRC src/*.cpp)
 # 创建二进制文件
-add_executable(wow ${GUI} ${COMMON} ${SERVICE} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
-# add_executable(wow-test ${TESTS} ${COMMON} ${SERVICE})
+add_executable(wow ${WOW} ${COMMON} ${SRC} ${IMGUI_BACKDENDS_SOURCES} ${IMGUI_SOURCES})
 # 链接GLFW OPenGL
 if(WIN32)
     target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a opengl32 gdi32 shell32)

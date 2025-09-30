@@ -1,12 +1,12 @@
 #include <format>
 #include <thread>
 #include "stl.h"
-#include "gui.h"
+#include "wow.h"
 #include "common.h"
 
 
 namespace App {
-    void InnerBackendTask(const str& title, func<void()> task) {
+    void InnerBackendTask(const string& title, function<void()> task) {
         try {
             task();
         } catch (exception& e) {
@@ -16,7 +16,7 @@ namespace App {
         backend_loading.Stop();
     }
 
-    void InnerGlobalTask(const str& title, func<void()> task) {
+    void InnerGlobalTask(const string& title, function<void()> task) {
         try {
             task();
         } catch (exception& e) {
@@ -26,7 +26,7 @@ namespace App {
         global_loading.Stop();
     }
 
-    void CreateBackendTask(const str& title, func<void()> task) {
+    void CreateBackendTask(const string& title, function<void()> task) {
         if(backend_loading.IsRunning() || global_loading.IsRunning()) {
             message_dialog.Open("任务正在运行, 请稍候");
             return;
@@ -36,7 +36,7 @@ namespace App {
         t.detach();
     }
 
-    void CreateGlobalTask(const str& title, func<void()> task) {
+    void CreateGlobalTask(const string& title, function<void()> task) {
         if(App::backend_loading.IsRunning() || App::global_loading.IsRunning()) {
             message_dialog.Open("任务正在运行, 请稍候");
             return;

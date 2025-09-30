@@ -7,7 +7,9 @@
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
 #include "implot.h"
-#include "gui.h"
+#include "wow.h"
+// 初始化主题
+void InitStyle();
 //----------------------------
 // 全局状态初始化
 //----------------------------

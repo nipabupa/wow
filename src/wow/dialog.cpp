@@ -1,9 +1,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
-#include <tuple>
 #include "stl.h"
-#include "gui.h"
+#include "wow.h"
 #include "imgui.h"
 #ifdef WIN32
 #include <windows.h>
@@ -111,7 +110,7 @@ namespace App {
         auto home = std::getenv("HOME");
         if(strlen(home) != 0) {
             const_directory.push_back({"Home", home});
-            auto lang = str(std::getenv("LANG"));
+            auto lang = string(std::getenv("LANG"));
             if(lang.starts_with("zh_CN")) {
                 const_directory.push_back({"桌面", std::format("{}/桌面", home)});
             } else {
@@ -144,11 +143,11 @@ namespace App {
         is_save_file = true;
     }
 
-    void FileDialog::SetFilter(const list<str>& filters) {
+    void FileDialog::SetFilter(const list<string>& filters) {
         exts = filters;
     }
 
-    void FileDialog::UpdateFileInfo(const str& dirname) {
+    void FileDialog::UpdateFileInfo(const string& dirname) {
         file_directory = dirname;
         fileinfo_list.clear();
         for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
@@ -172,7 +171,7 @@ namespace App {
             tmp.is_directory = entry.is_directory();
             fileinfo_list.push_back(tmp);
         }
-        std::sort(fileinfo_list.begin(), fileinfo_list.end(), _compare);
+        fileinfo_list.sort(_compare);
     }
 
     void FileDialog::Display() {
@@ -181,7 +180,7 @@ namespace App {
         }
         if(update) {
             if(file_directory.empty() && const_directory.size() > 0) {
-                file_directory = const_directory[0].second;
+                file_directory = const_directory.front().second;
             }
             UpdateFileInfo(file_directory);
             update = false;
@@ -270,7 +269,7 @@ namespace App {
         }
     }
 
-    str FileDialog::GetFileName() {
+    string FileDialog::GetFileName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
@@ -283,8 +282,8 @@ namespace App {
         }
     }
 
-    list<str> FileDialog::GetFileNames() {
-        list<str> res;
+    list<string> FileDialog::GetFileNames() {
+        list<string> res;
         if(fileinfo_list.empty()) {
             return res;
         } else {
@@ -297,7 +296,7 @@ namespace App {
         }
     }
 
-    str FileDialog::GetSaveName() {
+    string FileDialog::GetSaveName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
@@ -312,7 +311,7 @@ namespace App {
         }
     }
 
-    str FileDialog::GetDirName() {
+    string FileDialog::GetDirName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
