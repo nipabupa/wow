@@ -10,7 +10,7 @@ namespace App {
         try {
             task();
         } catch (exception& e) {
-            logger->error(e.what());
+            logger.Error(e.what());
             message_dialog.Open(format("{}失败", title));
         }
         backend_loading.Stop();
@@ -20,7 +20,7 @@ namespace App {
         try {
             task();
         } catch (exception& e) {
-            logger->error(e.what());
+            logger.Error(e.what());
             message_dialog.Open(format("{}失败", title));
         }
         global_loading.Stop();

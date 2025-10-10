@@ -1,14 +1,14 @@
 //----------------------------
 // (可选) Shell操作
 //----------------------------
-#include <chrono>
-#include <sstream>
 #include <thread>
+#include <chrono>
 #ifdef WIN32
 #include <windows.h>
 #endif
 #include "common.h"
 
+#ifdef WOW_SHELL
 
 void Command::_Internal() {
 #ifdef WIN32
@@ -26,8 +26,8 @@ void Command::_Internal() {
         ss << buffer;
     }
     pclose(pipe);
-    code = SUCCESS;
     output = ss.str();
+    code = SUCCESS;
 }
 
 Command::Command(const char* cmd) {
@@ -35,16 +35,14 @@ Command::Command(const char* cmd) {
     code = NONE;
 }
 
-void Command::Run() {
+string Command::Run() {
     code = NONE;
     std::thread t(&Command::_Internal, this);
     t.detach();
-}
-
-void Command::Wait() {
     while(code == RUNNING) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+    return output;
 }
 
 BackendCommand::BackendCommand(const char* cmd) {
@@ -79,3 +77,4 @@ void BackendCommand::Start() {
 void BackendCommand::Stop() {
 
 }
+#endif

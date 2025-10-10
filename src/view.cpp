@@ -1,3 +1,4 @@
+#include <thread>
 #include <chrono>
 #include "imgui.h"
 #include "wow.h"
@@ -6,7 +7,7 @@
 // 主窗口关闭回调
 //----------------------------
 void Close() {
-    logger->debug("exit");
+    logger.Info("exit");
 }
 void Hello() {
     std::this_thread::sleep_for(std::chrono::seconds(5));

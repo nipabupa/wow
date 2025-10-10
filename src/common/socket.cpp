@@ -75,7 +75,7 @@ void SocketClient::StartReceive(list<string>& data, std::mutex& mtx) {
 void SocketClient::StopReceive() {
     running = false;
 }
-#elif
+#else
 
 #endif
 #endif

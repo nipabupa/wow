@@ -28,7 +28,7 @@ namespace App {
 // 窗口异常回调
 //----------------------------
 static void glfw_error_callback(int error, const char* description) {
-    logger->error("GLFW Error {} : {}", error, description);
+    logger.Error(format("GLFW Error {} : {}", error, description));
 }
 //----------------------------
 // 可选-窗口关闭回调
@@ -41,7 +41,7 @@ static void glfw_close_callback(GLFWwindow* window) {
 // APP入口
 //----------------------------
 int main(int, char**) {
-    InitLogger();
+    logger.InitLogger();
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
         return 1;

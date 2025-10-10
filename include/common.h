@@ -20,6 +20,7 @@ extern Logger logger;
 //----------------------------
 // (可选) Shell命令
 //----------------------------
+#ifdef WOW_SHELL
 enum CommandCode {
     NONE = 0,
     RUNNING,
@@ -31,9 +32,10 @@ enum CommandCode {
 class Command {
 private:
     void _Internal();
-public:
-    CommandCode code;
     const char* cmd;
+    CommandCode code;
+    string output;
+public:
     Command(const char* cmd);
     string Run();
 };
@@ -49,6 +51,7 @@ public:
     void Start();
     void Stop();
 };
+#endif
 //----------------------------
 // (可选) Socket操作
 //----------------------------
@@ -71,12 +74,14 @@ public:
     void StartReceive(list<string>& data, std::mutex& mtx);
     void StopReceive();
 };
-#elif
+#else
 #endif
 #endif
 //----------------------------
 // (可选) 串口操作
 //----------------------------
+#ifdef WOW_SERIAL
+#include <mutex>
 class SerialClient {
 private:
     unsigned short number;
@@ -92,3 +97,4 @@ public:
     void StartReceive(list<string>& data, std::mutex& mtx);
     void StopReceive();
 };
+#endif
