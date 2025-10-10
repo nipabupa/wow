@@ -1,43 +1,81 @@
+//----------------------------
+// (可选) Shell操作
+//----------------------------
 #include <chrono>
 #include <sstream>
 #include <thread>
+#ifdef WIN32
+#include <windows.h>
+#endif
+#include "common.h"
 
 
-class Command {
-private:
-    void _Internal() {
-        FILE* pipe = popen(cmd, "r");
-        if(!pipe) {
-            code = ERROR;
-            return;
-        }
-        std::ostringstream ss;
-        char buffer[1024];
-        while(fgets(buffer, 1024, pipe) != NULL) {
-            ss << buffer;
-        }
-        pclose(pipe);
-        code = SUCCESS;
-        output = ss.str();
+void Command::_Internal() {
+#ifdef WIN32
+    FILE* pipe = _popen(cmd, "r");
+#else
+    FILE* pipe = popen(cmd, "r");
+#endif
+    if(!pipe) {
+        code = FAILED;
+        return;
     }
-public:
-    CommandCode code;
-    const char* cmd;
-    std::string output;
-    Command(const char* cmd) {
-        this->cmd = cmd;
-        code = NONE;
+    std::ostringstream ss;
+    char buffer[256];
+    while(fgets(buffer, 256, pipe) != NULL) {
+        ss << buffer;
     }
+    pclose(pipe);
+    code = SUCCESS;
+    output = ss.str();
+}
 
-    void Run() {
-        code = NONE;
-        std::thread t(&Command::_Internal, this);
-        t.detach();
-    }
+Command::Command(const char* cmd) {
+    this->cmd = cmd;
+    code = NONE;
+}
 
-    void Wait() {
-        while(code == RUNNING) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-        }
+void Command::Run() {
+    code = NONE;
+    std::thread t(&Command::_Internal, this);
+    t.detach();
+}
+
+void Command::Wait() {
+    while(code == RUNNING) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-};
+}
+
+BackendCommand::BackendCommand(const char* cmd) {
+    this->cmd = cmd;
+    code = NONE;
+}
+
+void BackendCommand::_Internal() {
+#ifdef WIN32
+    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+    HANDLE hRead, hWrite;
+    CreatePipe(&hRead, &hWrite, &sa, 0);
+    STARTUPINFO si = { sizeof(STARTUPINFO) };
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.hStdInput = hRead;
+    si.hStdOutput = hWrite;
+    si.wShowWindow = SW_HIDE;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+    BOOL result = CreateProcessA(NULL, (LPSTR)this->cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    if (!result) {
+        return -1;
+    }
+#else
+#endif
+}
+
+void BackendCommand::Start() {
+
+}
+
+void BackendCommand::Stop() {
+
+}

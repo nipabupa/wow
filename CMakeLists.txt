@@ -10,6 +10,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # unicode支持
 add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DWIN32 -D_WIN32)
+# 日志特性支持
+add_definitions(-DWOW_LOG)
+# SOCKET特性支持
+add_definitions(-DWOW_SOCKET)
+# Shell特性支持
+add_definitions(-DWOW_SHELL)
+# 串口特性支持
+add_definitions(-DWOW_SERIAL)
+
 set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "-O3 -DNDEBUG") # Release 模式
 set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
@@ -17,16 +26,21 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat") # Debug 模式
 set(IMGUI_DIR ${PROJECT_SOURCE_DIR}/lib/imgui)
 set(IMPLOT_DIR ${PROJECT_SOURCE_DIR}/lib/implot)
 set(GLFW_DIR ${PROJECT_SOURCE_DIR}/lib/glfw)
-set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
 # 头文件
 include_directories(
     ${GLFW_DIR}/include
-    ${SPDLOG_DIR}/include
     ${IMGUI_DIR}
     ${IMGUI_DIR}/backends
     ${IMPLOT_DIR}
     ${PROJECT_SOURCE_DIR}/include
 )
+
+if(WOW_LOG)
+set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/lib/spdlog)
+include_directories(${SPDLOG_DIR}/include)
+target_link_libraries(wow ${SPDLOG_DIR}/lib/libspdlog.a)
+endif()
+
 # 窗口与OpenGL代码
 set(IMGUI_BACKDENDS_SOURCES
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
@@ -54,5 +68,3 @@ if(WIN32)
 else()
     target_link_libraries(wow ${GLFW_DIR}/lib/libglfw3.a GL)
 endif()
-# 链接spdlog
-target_link_libraries(wow ${SPDLOG_DIR}/lib/libspdlog.a)

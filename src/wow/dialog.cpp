@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstring>
 #include <cstdlib>
 #include <filesystem>
@@ -100,7 +101,7 @@ namespace App {
             const_directory.push_back({"桌面", std::format("C:\\Users\\{}\\Desktop", buffer)});
         }
         DWORD length = GetLogicalDriveStringsA(255, buffer);
-        for(int i=0; i<length; i++) {
+        for(size_t i=0; i<length; i++) {
             if(buffer[i] >= 'A' && buffer[i] <= 'Z') {
                 auto tmp = format("{}:\\", buffer[i]);
                 const_directory.push_back({tmp, tmp});
@@ -193,11 +194,6 @@ namespace App {
             // 当前目录
             ImGui::BeginGroup();
             if(ImGui::PrimaryButton("确定##FileDialog", button_size)) {
-                for (auto& name : fileinfo_list) {
-                    if(name.is_checked) {
-                        std::cout << name.filename << std::endl;
-                    }
-                }
                 state = READY;
                 ImGui::CloseCurrentPopup();
             }
@@ -209,7 +205,7 @@ namespace App {
             }
             ImGui::SameLine();
             if(ImGui::Button("上一级##FileDialog", button_size)) {
-                file_directory = current_path.parent_path();
+                file_directory = current_path.parent_path().string();
                 update = true;
             }
             ImGui::SameLine();
@@ -224,14 +220,12 @@ namespace App {
             // 内容
             ImGui::BeginGroup();
             ImGui::BeginGroup();
-            ImGui::PushStyleVarY(ImGuiStyleVar_ItemSpacing, font_size / 2);
             for(auto p : const_directory) {
                 if(ImGui::Button(std::format("{}##FileDialog", p.first).c_str(), button_size)) {
                     file_directory = p.second;
                     update = true;
                 };
             }
-            ImGui::PopStyleVar();
             ImGui::EndGroup();
             ImGui::SameLine();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(3, 3));
@@ -275,7 +269,9 @@ namespace App {
         } else {
             for (auto fileinfo : fileinfo_list) {
                 if(!fileinfo.is_directory && fileinfo.is_checked) {
-                    return fileinfo.filename;
+                    std::filesystem::path tmp(file_directory);
+                    tmp.append(fileinfo.filename);
+                    return tmp.string();
                 }
             }
             return "";
@@ -289,7 +285,9 @@ namespace App {
         } else {
             for (auto fileinfo : fileinfo_list) {
                 if(!fileinfo.is_directory && fileinfo.is_checked) {
-                    res.push_back(fileinfo.filename);
+                    std::filesystem::path tmp(file_directory);
+                    tmp.append(fileinfo.filename);
+                    res.push_back(tmp.string());
                 }
             }
             return res;
@@ -303,8 +301,8 @@ namespace App {
             for (auto fileinfo : fileinfo_list) {
                 if(fileinfo.is_directory && fileinfo.is_checked) {
                     std::filesystem::path tmp(fileinfo.filename);
-                    tmp.append(file_name);
-                    return tmp;
+                    tmp.append(fileinfo.filename);
+                    return tmp.string();
                 }
             }
             return "";
@@ -317,7 +315,9 @@ namespace App {
         } else {
             for (auto fileinfo : fileinfo_list) {
                 if(fileinfo.is_directory && fileinfo.is_checked) {
-                    return fileinfo.filename;
+                    std::filesystem::path tmp(file_directory);
+                    tmp.append(fileinfo.filename);
+                    return tmp.string();
                 }
             }
             return "";

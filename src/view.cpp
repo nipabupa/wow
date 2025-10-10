@@ -34,11 +34,8 @@ void DrawContent() {
     ImGui::PushItemWidth(200.0f);
     ImGui::CustomCombo("选择", items, 3, index, NULL);
     ImGui::PopItemWidth();
-    ImGui::EndGroup();
-
-    ImGui::Section("按钮&回调");
+    ImGui::SameLine();
     static int counter = 0;
-    ImGui::BeginGroup();
     if (ImGui::PrimaryButton("数据绑定")) {
         counter++;
     }
@@ -54,7 +51,7 @@ void DrawContent() {
     static int num4[3] = {0, 0, 0};
     static int num5[4] = {0, 0, 0, 0};
     ImGui::BeginGroup();
-    ImGui::PushItemWidth(250.0f);
+    ImGui::PushItemWidth(350.0f);
     ImGui::InputInt("整数", &num1);
     ImGui::SameLine();
     ImGui::InputFloat("浮点数", &num2);
@@ -63,7 +60,7 @@ void DrawContent() {
     ImGui::PopItemWidth();
     ImGui::EndGroup();
     ImGui::BeginGroup();
-    ImGui::PushItemWidth(250.0f);
+    ImGui::PushItemWidth(350.0f);
     ImGui::InputInt2("2个整数", num3);
     ImGui::SameLine();
     ImGui::InputInt3("3个整数", num4);
@@ -137,24 +134,11 @@ void DrawContent() {
     ImGui::EndChild();
 }
 
-bool another_dialog = false;
-
 void DrawWindow() {
     App::backend_loading.Display();
     App::global_loading.Display();
     App::message_dialog.Display();
     App::file_dialog.Display();
-    //----------------------------
-    // 自定义窗口
-    //----------------------------
-    static bool state;
-    if(another_dialog) {
-        ImGui::Begin("Demo", &another_dialog, ImGuiWindowFlags_NoCollapse); 
-        ImGui::Checkbox("形状##1", &state);
-        ImGui::SameLine();
-        ImGui::ToggleButton("圆形", &state, "方形");
-        ImGui::End();
-    }
 }
 
 void Draw() {
