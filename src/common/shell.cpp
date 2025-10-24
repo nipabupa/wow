@@ -3,12 +3,7 @@
 //----------------------------
 #include <thread>
 #include <chrono>
-#ifdef WIN32
-#include <windows.h>
-#endif
 #include "common.h"
-
-#ifdef WOW_SHELL
 
 void Command::_Internal() {
 #ifdef WIN32
@@ -62,10 +57,10 @@ void BackendCommand::_Internal() {
     si.wShowWindow = SW_HIDE;
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(pi));
-    BOOL result = CreateProcessA(NULL, (LPSTR)this->cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
-    if (!result) {
-        return -1;
-    }
+    // BOOL result = CreateProcessA(NULL, (LPSTR)this->cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+    // if (!result) {
+    //     return;
+    // }
 #else
 #endif
 }
@@ -77,4 +72,3 @@ void BackendCommand::Start() {
 void BackendCommand::Stop() {
 
 }
-#endif

@@ -3,9 +3,7 @@
 //----------------------------
 #include "common.h"
 #include <format>
-#ifdef WOW_SOCKET
 #ifdef WIN32
-#pragma comment(lib, "WS2_32")
 
 SocketClient::SocketClient(string ip, unsigned short port) {
     this->ip = ip;
@@ -45,7 +43,7 @@ void SocketClient::Send(string msg) {
     }
 }
 
-string SocketClient::ReceiveMessage() {
+string SocketClient::Receive() {
     char szBuffer[MAXBYTE] = {0};
     int v = recv(client, szBuffer, MAXBYTE, 0);
     if(v > 0) {
@@ -77,5 +75,4 @@ void SocketClient::StopReceive() {
 }
 #else
 
-#endif
 #endif

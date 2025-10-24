@@ -70,7 +70,7 @@ public:
     void Open();
     void Close();
     void Send(string msg);
-    string ReceiveMessage();
+    string Receive();
     void StartReceive(list<string>& data, std::mutex& mtx);
     void StopReceive();
 };
@@ -97,4 +97,8 @@ public:
     void StartReceive(list<string>& data, std::mutex& mtx);
     void StopReceive();
 };
+#endif
+
+#ifdef WIN32
+#include <windows.h>
 #endif
