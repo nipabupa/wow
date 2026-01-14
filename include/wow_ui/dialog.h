@@ -1,30 +1,16 @@
-/*********************************
- *
- * WOW框架能力
- *
- *********************************/
 #pragma once
-#include "stl.h"
-//----------------------------
-// 生命周期Hook, 需要手动实现
-//----------------------------
-void Draw();
-void Close();
-//----------------------------
-// 全局状态
-//----------------------------
-namespace App {
+#include <string>
+#include <functional>
+#include <list>
+
+
+namespace WowDialog {
     enum TaskState {
         READY,
         START,
         RUNNING,
         STOP,
     };
-    // 缩放比例
-    extern float scale;
-    // 实时窗口尺寸
-    extern int width;
-    extern int height;
     //----------------------------
     // 后台加载
     //----------------------------
@@ -77,15 +63,15 @@ namespace App {
         // 全局消息状态
         TaskState state;
         // 消息窗口内容
-        string message;
+        std::string message;
         // 消息窗口确认回调
-        function<void()> confirm; // 是否点击确认回调
+        std::function<void()> confirm; // 是否点击确认回调
     public:
         MessageDialog() {
             state = READY;
         }
         void Display();
-        void Open(const string& msg, function<void()> callback = NULL) {
+        void Open(const std::string& msg, std::function<void()> callback = NULL) {
             message = msg;
             confirm = callback;
             state = START;
@@ -96,54 +82,34 @@ namespace App {
     // 文件选择窗口
     //----------------------------
     struct FileInfo {
-        string filename;
+        std::string filename;
         bool is_directory;
         bool is_checked;
     };
     class FileDialog {
     private:
         TaskState state;
-        string file_directory;
+        std::string file_directory;
         char file_name[256];
         bool is_select_directory;
         bool is_save_file;
-        list<string> exts;
-        list<FileInfo> fileinfo_list;
-        list<std::pair<string, string>> const_directory;
+        std::list<std::string> exts;
+        std::list<FileInfo> fileinfo_list;
+        std::list<std::pair<std::string, std::string>> const_directory;
         bool update;
-        void UpdateFileInfo(const string& dirname);
+        void UpdateFileInfo(const std::string& dirname);
     public:
         FileDialog();
         void Display();
         void Open();
-        string GetFileName();
-        list<string> GetFileNames();
-        string GetSaveName();
-        string GetDirName();
+        std::string GetFileName();
+        std::list<std::string> GetFileNames();
+        std::string GetSaveName();
+        std::string GetDirName();
         void ChangeToSelectFiles();
         void ChangeToSelectDirectory();
         void ChangeToSaveFile();
-        void SetFilter(const list<string>& filters);
+        void SetFilter(const std::list<std::string>& filters);
     };
     extern FileDialog file_dialog;
-    //----------------------------
-    // 任务管理
-    //----------------------------
-    // 创建后台任务
-    void CreateBackendTask(const string& title, function<void()> task);
-    // 创建全局任务
-    void CreateGlobalTask(const string& title, function<void()> task);
-}
-//----------------------------
-// 新增ImGui组件
-//----------------------------
-namespace ImGui {
-    void Title(const char* label, const ImVec4& color = Style::TextColor);
-    void Section(const char* label, const ImVec4& color = Style::TextColor);
-    bool PrimaryButton(const char* label, const ImVec2& size = Style::AutoSize);
-    bool DangerButton(const char* label, const ImVec2& size = Style::AutoSize);
-    void Spinner(const char* label, float radius, int thickness, const ImVec4& color);
-    void BufferingBar(const char* label, float value,  const ImVec2& size_arg, const ImU32& bg_col, const ImU32& fg_col);
-    void ToggleButton(const char* str_id, bool* v, const char* other_label);
-    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)() = NULL, int flags = ImGuiComboFlags_None);
 }

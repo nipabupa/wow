@@ -1,0 +1,13 @@
+-xc++
+-std=c++20
+
+-I
+include
+-I
+./deps/imgui/
+-I
+./deps/implot/
+-I
+./deps/spdlog/include
+-I
+./deps/glfw/include

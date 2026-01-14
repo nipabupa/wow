@@ -31,7 +31,7 @@ namespace App {
             message_dialog.Open("任务正在运行, 请稍候");
             return;
         }
-        backend_loading.Start();
+        b ackend_loading.Start();
         std::thread t(std::bind(InnerBackendTask, title, task));
         t.detach();
     }

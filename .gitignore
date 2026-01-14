@@ -2,5 +2,5 @@
 debug
 release
 build
-lib
+deps
 compile_commands.json
