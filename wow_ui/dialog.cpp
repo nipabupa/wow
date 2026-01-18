@@ -1,25 +1,25 @@
-#include <cstddef>
-#include <cstring>
-#include <cstdlib>
 #include <filesystem>
-#include "stl.h"
-#include "wow.h"
-#include "imgui.h"
 #ifdef WIN32
 #include <windows.h>
 #include <shlobj.h>
 #endif
+// #include <cstddef>
+// #include <cstring>
+// #include <cstdlib>
+#include "imgui.h"
+#include "imgui_extends.h"
+#include "wow_ui.h"
 
 
-namespace App {
+namespace WowDialog {
     void BackendLoading::Display() {
         auto font_size = ImGui::GetFontSize();
         auto style = ImGui::GetStyle();
         if(state == RUNNING) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
             ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground);
-            ImGui::Spinner("Spinner", font_size, font_size / 2, Style::LoadingColor);
-            ImGui::SetWindowPos(ImVec2(App::width - ImGui::GetWindowSize().x - style.WindowPadding.x, style.WindowPadding.y));
+            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::ColorConvertU32ToFloat4(ImGui::GetExtendStyle().LoadingColor));
+            ImGui::SetWindowPos(ImVec2(WowConfig::wow_info.width - ImGui::GetWindowSize().x - style.WindowPadding.x, style.WindowPadding.y));
             ImGui::End();
             ImGui::PopStyleVar();
         }
@@ -32,8 +32,8 @@ namespace App {
         }
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
         if(ImGui::BeginPopupModal("GlobalLoading", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Spinner("Spinner", font_size, font_size / 2, Style::LoadingColor);
-            ImGui::SetWindowPos(ImVec2((App::width - ImGui::GetWindowSize().x) / 2, font_size * 20));
+            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::ColorConvertU32ToFloat4(ImGui::GetExtendStyle().LoadingColor));
+            ImGui::SetWindowPos(ImVec2((WowConfig::wow_info.width - ImGui::GetWindowSize().x) / 2, font_size * 20));
             ImGui::EndPopup();
         }
         ImGui::PopStyleVar();
@@ -53,10 +53,10 @@ namespace App {
             return;
         }
         if(ImGui::BeginPopupModal("注意##MessageDialog", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::SetWindowPos(ImVec2((App::width - ImGui::GetWindowSize().x) / 2, font_size * 10));
+            ImGui::SetWindowPos(ImVec2((WowConfig::wow_info.width - ImGui::GetWindowSize().x) / 2, font_size * 10));
             ImGui::Text("%s", message.c_str());
             ImGui::BeginGroup();
-            if(ImGui::Button("确定", ImVec2(style.FontSizeBase * scale * 6, 0))){
+            if(ImGui::Button("确定", ImVec2(font_size * 6, 0))){
                 if(confirm != NULL) {
                     confirm();
                     confirm = NULL;
@@ -66,7 +66,7 @@ namespace App {
             };
             if(confirm != NULL) {
                 ImGui::SameLine();
-                if(ImGui::Button("取消", ImVec2(style.FontSizeBase * scale * 6, 0))){
+                if(ImGui::Button("取消", ImVec2(font_size * 6, 0))){
                     ImGui::CloseCurrentPopup();
                     state = READY;
                 };
@@ -111,7 +111,7 @@ namespace App {
         auto home = std::getenv("HOME");
         if(strlen(home) != 0) {
             const_directory.push_back({"Home", home});
-            auto lang = string(std::getenv("LANG"));
+            auto lang = std::string(std::getenv("LANG"));
             if(lang.starts_with("zh_CN")) {
                 const_directory.push_back({"桌面", std::format("{}/桌面", home)});
             } else {
@@ -144,11 +144,11 @@ namespace App {
         is_save_file = true;
     }
 
-    void FileDialog::SetFilter(const list<string>& filters) {
+    void FileDialog::SetFilter(const std::list<std::string>& filters) {
         exts = filters;
     }
 
-    void FileDialog::UpdateFileInfo(const string& dirname) {
+    void FileDialog::UpdateFileInfo(const std::string& dirname) {
         file_directory = dirname;
         fileinfo_list.clear();
         for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
@@ -176,6 +176,7 @@ namespace App {
     }
 
     void FileDialog::Display() {
+        auto style = ImGui::GetExtendStyle();
         if(state == READY || state == STOP) {
             return;
         }
@@ -209,7 +210,7 @@ namespace App {
                 update = true;
             }
             ImGui::SameLine();
-            ImGui::TextColored(Style::PrimaryColor, "当前目录: %s", file_directory.c_str());
+            ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(style.PrimaryColor), "当前目录: %s", file_directory.c_str());
             ImGui::EndGroup();
             // 输入
             if(is_save_file) {
@@ -239,7 +240,7 @@ namespace App {
                     ImGui::Checkbox(format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
                     ImGui::TableNextColumn();
                     if(fileinfo.is_directory) {
-                        ImGui::TextColored(Style::PrimaryColor, "%s", fileinfo.filename.c_str());
+                        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(style.PrimaryColor), "%s", fileinfo.filename.c_str());
                         ImGui::TableNextColumn();
                         if(ImGui::ArrowButton(std::format("##Right{}", fileinfo.filename).c_str(), ImGuiDir_Right)) {
                             current_path.append(fileinfo.filename);
@@ -263,7 +264,7 @@ namespace App {
         }
     }
 
-    string FileDialog::GetFileName() {
+    std::string FileDialog::GetFileName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
@@ -278,8 +279,8 @@ namespace App {
         }
     }
 
-    list<string> FileDialog::GetFileNames() {
-        list<string> res;
+    std::list<std::string> FileDialog::GetFileNames() {
+        std::list<std::string> res;
         if(fileinfo_list.empty()) {
             return res;
         } else {
@@ -294,7 +295,7 @@ namespace App {
         }
     }
 
-    string FileDialog::GetSaveName() {
+    std::string FileDialog::GetSaveName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
@@ -309,7 +310,7 @@ namespace App {
         }
     }
 
-    string FileDialog::GetDirName() {
+    std::string FileDialog::GetDirName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {

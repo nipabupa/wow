@@ -2,9 +2,21 @@
 -std=c++20
 
 -I
-include
+imgui_extends
+-I
+wow_common
+-I
+wow_ui
+-I
+wow_serial
+-I
+wow_socket
+-I
+wow_subprocess
 -I
 ./deps/imgui/
+-I
+./deps/imgui/backends
 -I
 ./deps/implot/
 -I
