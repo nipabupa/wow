@@ -1,13 +1,12 @@
-#include <filesystem>
+#include "wow_common.h"
+#include <format>
 #ifdef WIN32
 #include <windows.h>
 #include <shlobj.h>
 #endif
-// #include <cstddef>
-// #include <cstring>
-// #include <cstdlib>
 #include "imgui.h"
 #include "imgui_extends.h"
+#include "imgui_stdlib.h"
 #include "wow_ui.h"
 
 
@@ -18,8 +17,8 @@ namespace WowDialog {
         if(state == RUNNING) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
             ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground);
-            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::ColorConvertU32ToFloat4(ImGui::GetExtendStyle().LoadingColor));
-            ImGui::SetWindowPos(ImVec2(WowConfig::wow_info.width - ImGui::GetWindowSize().x - style.WindowPadding.x, style.WindowPadding.y));
+            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::GetExtendStyle().LoadingColor.vec4);
+            ImGui::SetWindowPos(ImVec2(WowConfig::app_info.width - ImGui::GetWindowSize().x - style.WindowPadding.x, style.WindowPadding.y));
             ImGui::End();
             ImGui::PopStyleVar();
         }
@@ -27,13 +26,13 @@ namespace WowDialog {
 
     void GlobalLoading::Display() {
         auto font_size = ImGui::GetFontSize();
-        if(state == READY) {
+        if(state == READY || message_dialog.IsRunning() || file_dialog.IsRunning()) {
             return;
         }
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
         if(ImGui::BeginPopupModal("GlobalLoading", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::ColorConvertU32ToFloat4(ImGui::GetExtendStyle().LoadingColor));
-            ImGui::SetWindowPos(ImVec2((WowConfig::wow_info.width - ImGui::GetWindowSize().x) / 2, font_size * 20));
+            ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::GetExtendStyle().LoadingColor.vec4);
+            ImGui::SetWindowPos(ImVec2((WowConfig::app_info.width - ImGui::GetWindowSize().x) / 2, font_size * 20));
             ImGui::EndPopup();
         }
         ImGui::PopStyleVar();
@@ -49,11 +48,11 @@ namespace WowDialog {
     void MessageDialog::Display() {
         auto style = ImGui::GetStyle();
         auto font_size = ImGui::GetFontSize();
-        if(state == READY || state == STOP) {
+        if(state == READY) {
             return;
         }
         if(ImGui::BeginPopupModal("注意##MessageDialog", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::SetWindowPos(ImVec2((WowConfig::wow_info.width - ImGui::GetWindowSize().x) / 2, font_size * 10));
+            ImGui::SetWindowPos(ImVec2((WowConfig::app_info.width - ImGui::GetWindowSize().x) / 2, font_size * 10));
             ImGui::Text("%s", message.c_str());
             ImGui::BeginGroup();
             if(ImGui::Button("确定", ImVec2(font_size * 6, 0))){
@@ -103,7 +102,7 @@ namespace WowDialog {
         DWORD length = GetLogicalDriveStringsA(255, buffer);
         for(size_t i=0; i<length; i++) {
             if(buffer[i] >= 'A' && buffer[i] <= 'Z') {
-                auto tmp = format("{}:\\", buffer[i]);
+                auto tmp = std::format("{}:\\", buffer[i]);
                 const_directory.push_back({tmp, tmp});
             }
         }
@@ -126,32 +125,34 @@ namespace WowDialog {
         update = true;
     }
 
-    void FileDialog::ChangeToSelectFiles() {
+    void FileDialog::Wait() {
+        do {
+            SLEEP(50);
+        } while(state == RUNNING);
+    }
+
+    void FileDialog::ChangeToSelectFiles(std::list<std::string>&& filters) {
         exts.clear();
+        exts.splice(exts.end(), filters);
         is_select_directory = false;
         is_save_file = false;
     }
 
     void FileDialog::ChangeToSelectDirectory() {
-        exts.clear();
         is_select_directory = true;
         is_save_file = false;
     }
 
-    void FileDialog::ChangeToSaveFile() {
+    void FileDialog::ChangeToSaveFile(std::list<std::string>&& filters) {
         exts.clear();
+        exts.splice(exts.end(), filters);
         is_select_directory = true;
         is_save_file = true;
     }
 
-    void FileDialog::SetFilter(const std::list<std::string>& filters) {
-        exts = filters;
-    }
-
-    void FileDialog::UpdateFileInfo(const std::string& dirname) {
-        file_directory = dirname;
+    void FileDialog::UpdateFileInfo() {
         fileinfo_list.clear();
-        for (const auto& entry : std::filesystem::directory_iterator(dirname)) {
+        for (const auto& entry : std::filesystem::directory_iterator(current_path)) {
             if(is_select_directory && !entry.is_directory()) {
                 continue;
             }
@@ -167,7 +168,8 @@ namespace WowDialog {
                 }
             }
             FileInfo tmp;
-            tmp.filename = entry.path().filename().string();
+            tmp.path = entry.path();
+            tmp.filename = (char*)entry.path().filename().generic_u8string().c_str();
             tmp.is_checked = false;
             tmp.is_directory = entry.is_directory();
             fileinfo_list.push_back(tmp);
@@ -177,19 +179,18 @@ namespace WowDialog {
 
     void FileDialog::Display() {
         auto style = ImGui::GetExtendStyle();
-        if(state == READY || state == STOP) {
+        if(state == READY || message_dialog.IsRunning()) {
             return;
         }
         if(update) {
-            if(file_directory.empty() && const_directory.size() > 0) {
-                file_directory = const_directory.front().second;
+            if(current_name.empty() && const_directory.size() > 0) {
+                current_path = const_directory.front().second;
             }
-            UpdateFileInfo(file_directory);
+            UpdateFileInfo();
             update = false;
         }
         auto font_size = ImGui::GetFontSize();
         ImVec2 button_size = ImVec2(font_size * 6, 0);
-        std::filesystem::path current_path(file_directory);
         if(ImGui::BeginPopupModal("文件选择##FileDialog", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize)) {
             ImGui::SetWindowSize(ImVec2(font_size*70, font_size*35));
             // 当前目录
@@ -206,16 +207,19 @@ namespace WowDialog {
             }
             ImGui::SameLine();
             if(ImGui::Button("上一级##FileDialog", button_size)) {
-                file_directory = current_path.parent_path().string();
+                current_path = current_path.parent_path();
+                current_name = (char*)current_path.filename().generic_u8string().c_str();
                 update = true;
             }
             ImGui::SameLine();
-            ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(style.PrimaryColor), "当前目录: %s", file_directory.c_str());
+            ImGui::PushItemWidth(font_size*30);
+            ImGui::InputText("当前目录", &current_name);
+            ImGui::PopItemWidth();
             ImGui::EndGroup();
             // 输入
             if(is_save_file) {
                 ImGui::PushItemWidth(font_size*40);
-                ImGui::InputText("输入文件名##FileDialog", file_name, 256);
+                ImGui::InputText("输入文件名##FileDialog", input_filename, 256);
                 ImGui::PopItemWidth();
             }
             // 内容
@@ -223,7 +227,8 @@ namespace WowDialog {
             ImGui::BeginGroup();
             for(auto p : const_directory) {
                 if(ImGui::Button(std::format("{}##FileDialog", p.first).c_str(), button_size)) {
-                    file_directory = p.second;
+                    current_path = p.second;
+                    current_name = (char*)current_path.filename().generic_u8string().c_str();
                     update = true;
                 };
             }
@@ -240,11 +245,11 @@ namespace WowDialog {
                     ImGui::Checkbox(format("##{}", fileinfo.filename).c_str(), &fileinfo.is_checked);
                     ImGui::TableNextColumn();
                     if(fileinfo.is_directory) {
-                        ImGui::TextColored(ImGui::ColorConvertU32ToFloat4(style.PrimaryColor), "%s", fileinfo.filename.c_str());
+                        ImGui::TextColored(style.PrimaryColor.vec4, "%s", fileinfo.filename.c_str());
                         ImGui::TableNextColumn();
                         if(ImGui::ArrowButton(std::format("##Right{}", fileinfo.filename).c_str(), ImGuiDir_Right)) {
-                            current_path.append(fileinfo.filename);
-                            file_directory = current_path.string();
+                            current_path = fileinfo.path;
+                            current_name = (char*)current_path.filename().generic_u8string().c_str();
                             update = true;
                         }
                     } else {
@@ -264,64 +269,49 @@ namespace WowDialog {
         }
     }
 
-    std::string FileDialog::GetFileName() {
+    fs::path FileDialog::GetFileName() {
         if(fileinfo_list.empty()) {
             return "";
         } else {
             for (auto fileinfo : fileinfo_list) {
                 if(!fileinfo.is_directory && fileinfo.is_checked) {
-                    std::filesystem::path tmp(file_directory);
-                    tmp.append(fileinfo.filename);
-                    return tmp.string();
+                    return fileinfo.path;
                 }
             }
             return "";
         }
     }
 
-    std::list<std::string> FileDialog::GetFileNames() {
-        std::list<std::string> res;
+    std::list<fs::path> FileDialog::GetFileNames() {
+        std::list<fs::path> res;
         if(fileinfo_list.empty()) {
             return res;
         } else {
             for (auto fileinfo : fileinfo_list) {
                 if(!fileinfo.is_directory && fileinfo.is_checked) {
-                    std::filesystem::path tmp(file_directory);
-                    tmp.append(fileinfo.filename);
-                    res.push_back(tmp.string());
+                    res.push_back(fileinfo.path);
                 }
             }
             return res;
         }
     }
 
-    std::string FileDialog::GetSaveName() {
-        if(fileinfo_list.empty()) {
+    fs::path FileDialog::GetSaveName() {
+        if(current_path.empty()) {
             return "";
         } else {
-            for (auto fileinfo : fileinfo_list) {
-                if(fileinfo.is_directory && fileinfo.is_checked) {
-                    std::filesystem::path tmp(fileinfo.filename);
-                    tmp.append(fileinfo.filename);
-                    return tmp.string();
-                }
-            }
-            return "";
+            fs::path tmp = current_path;
+            tmp.append(input_filename);
+            return tmp;
         }
     }
 
-    std::string FileDialog::GetDirName() {
-        if(fileinfo_list.empty()) {
-            return "";
-        } else {
-            for (auto fileinfo : fileinfo_list) {
-                if(fileinfo.is_directory && fileinfo.is_checked) {
-                    std::filesystem::path tmp(file_directory);
-                    tmp.append(fileinfo.filename);
-                    return tmp.string();
-                }
+    fs::path FileDialog::GetDirName() {
+        for (auto fileinfo : fileinfo_list) {
+            if(fileinfo.is_directory && fileinfo.is_checked) {
+                return fileinfo.path;
             }
-            return "";
         }
+        return current_path;
     }
 }

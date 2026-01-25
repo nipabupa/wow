@@ -11,6 +11,8 @@
 #ifdef BUILD_IMPLOT
 #include "implot.h"
 #endif
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 //----------------------------
 // 主题初始化
@@ -20,13 +22,13 @@ void InitStyle(float scale) {
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiExtendStyle& style_ = ImGui::GetExtendStyle();
     style.FontScaleDpi = scale;
-    style.FontSizeBase = WowConfig::wow_info.font_base;
+    style.FontSizeBase = WowConfig::app_info.font_base;
     // color
     auto colors = style.Colors;
     colors[ImGuiCol_WindowBg] = ImVec4(0.125f, 0.125f, 0.125f, 1.0f);
     colors[ImGuiCol_ChildBg] = ImVec4(0.140f, 0.140f, 0.140f, 1.0f);
-    colors[ImGuiCol_Border] = colors[ImGuiCol_Border];
-    colors[ImGuiCol_Text] = ImVec4(0.140f, 0.140f, 0.140f, 1.0f);
+    colors[ImGuiCol_Border] = colors[ImGuiCol_ChildBg];
+    colors[ImGuiCol_Text] = ImVec4(0.808f, 0.808f, 0.808f, 1.0f);
     colors[ImGuiCol_TextSelectedBg] = ImVec4(0.329f, 0.663f, 1.0f, 0.588f);
     colors[ImGuiCol_TextDisabled] = ImVec4(0.463f, 0.463f, 0.463f, 1.0f);
     colors[ImGuiCol_FrameBg] = ImVec4(0.192f, 0.192f, 0.208f, 1.0f);
@@ -39,8 +41,8 @@ void InitStyle(float scale) {
     colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.105f, 0.105f, 0.105f, 0.8f);
     colors[ImGuiCol_PopupBg] = colors[ImGuiCol_ChildBg];
     colors[ImGuiCol_ScrollbarBg] = colors[ImGuiCol_WindowBg];
-    if(WowConfig::wow_callback.ConfigTheme != nullptr) {
-        WowConfig::wow_callback.ConfigTheme();
+    if(WowConfig::app_callback.ConfigTheme != nullptr) {
+        WowConfig::app_callback.ConfigTheme();
     }
     // size
     style.WindowPadding = ImVec2(style.FontSizeBase, style.FontSizeBase);
@@ -71,7 +73,9 @@ static void glfw_error_callback(int error, const char* description) {
 // 窗口关闭回调
 //----------------------------
 static void glfw_close_callback(GLFWwindow* window) {
-    if(WowConfig::wow_callback.Teardown != nullptr && WowConfig::wow_callback.Teardown()) {
+    WowTask::ReleaseBackendTaskThread();
+    WowTask::ReleaseGlobalTaskThread();
+    if(WowConfig::app_callback.Teardown != nullptr || !WowConfig::app_callback.Teardown()) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     } else {
         glfwSetWindowShouldClose(window, GLFW_FALSE);
@@ -81,8 +85,8 @@ static void glfw_close_callback(GLFWwindow* window) {
 // APP入口
 //----------------------------
 int Run() {
-    auto& app_info = WowConfig::wow_info;
-    auto& app_callback = WowConfig::wow_callback;
+    auto& app_info = WowConfig::app_info;
+    auto& app_callback = WowConfig::app_callback;
     if(app_info.log_path.size() != 0) {
         WowCommon::InitFileLogger(app_info.log_path);
     } else {
@@ -90,6 +94,7 @@ int Run() {
     }
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
+        WowCommon::logger->error("GLFW初始化失败");
         return 1;
     }
     const char* glsl_version = "#version 130";
@@ -103,11 +108,21 @@ int Run() {
     app_info.height = (int)(app_info.height * scale);
     GLFWwindow* window = glfwCreateWindow(app_info.width, app_info.height, app_info.name.c_str(), nullptr, nullptr);
     if (window == nullptr) {
+        WowCommon::logger->error("GLFW窗口创建失败");
         return 1;
     }
     glfwSetWindowCloseCallback(window, glfw_close_callback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+    GLFWimage icon;
+    if(fs::exists(app_info.icon_path)) {
+        icon.pixels = stbi_load(app_info.icon_path.c_str(), &icon.width, &icon.height, 0, 4);
+        if(!icon.pixels) {
+            WowCommon::logger->error("加载APP图标失败");
+            return 1;
+        }
+        glfwSetWindowIcon(window, 1, &icon);
+    }
     // 初始化上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -138,7 +153,19 @@ int Run() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // draw
+        WowDialog::message_dialog.Display();
+        WowDialog::file_dialog.Display();
+        WowDialog::global_loading.Display();
+        WowDialog::backend_loading.Display();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        ImGui::Begin("app", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
+        ImGui::PopStyleVar();
         app_callback.Draw();
+        if (ImGui::GetWindowPos().y != 0) {
+            ImGui::SetWindowSize(ImVec2(app_info.width, app_info.height));
+            ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
+        }
+        ImGui::End();
         // Rendering
         ImGui::Render();
         glfwGetFramebufferSize(window, &app_info.width, &app_info.height);
@@ -156,7 +183,9 @@ int Run() {
     ImPlot::DestroyContext();
 #endif
     ImGui::DestroyContext();
-
+    if(icon.pixels != nullptr) {
+        free(icon.pixels);
+    }
     glfwDestroyWindow(window);
     glfwTerminate();
 

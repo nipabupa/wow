@@ -5,7 +5,7 @@
 
 
 namespace WowUtils {
-    std::vector<std::string> StringSplit(std::string &s, char deli) {
+    WOW_COMMON_API std::vector<std::string> StringSplit(std::string &s, char deli) {
         std::vector<std::string> res;
         std::istringstream ss(s);
         std::string token;
@@ -15,7 +15,7 @@ namespace WowUtils {
         return res;
     }
 
-    std::string GetCurrentDateTime(char type) {
+    WOW_COMMON_API std::string GetCurrentDateTime(char type) {
         auto now = std::chrono::system_clock::now();
         if(type == 'f') {
             // 文件名字符串

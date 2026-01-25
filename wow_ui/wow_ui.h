@@ -2,11 +2,22 @@
 #include <functional>
 #include <list>
 #include <string>
-#include "wow_common.h"
+#include <filesystem>
 
+namespace fs = std::filesystem;
+
+#ifdef WIN32
+#ifdef WOW_UI_EXPORT
+#define WOW_UI_API __declspec(dllexport)
+#else
+#define WOW_UI_API __declspec(dllimport)
+#endif
+#else
+#define WOW_UI_API
+#endif
 
 namespace WowConfig {
-    struct AppInfo {
+    WOW_UI_API struct AppInfo {
         // 设计窗口尺寸
         int width = 1280;
         int height = 768;
@@ -16,6 +27,8 @@ namespace WowConfig {
         std::string name = "wow";
         // 日志文件路径
         std::string log_path = "";
+        unsigned int log_size = 102400;
+        unsigned short log_nums = 5;
         // 默认图标路径
         std::string icon_path = "assets/app.png";
         // 默认字体文件路径
@@ -26,7 +39,7 @@ namespace WowConfig {
 #endif
     };
 
-    struct AppCallback {
+    WOW_UI_API struct AppCallback {
         // 初始化数据加载
         std::function<bool()> Setup = nullptr;
         // Frame渲染
@@ -37,8 +50,8 @@ namespace WowConfig {
         std::function<void()> ConfigTheme = nullptr;
     };
 
-    extern WOW_API AppInfo wow_info;
-    extern WOW_API AppCallback wow_callback;
+    extern WOW_UI_API AppInfo app_info;
+    extern WOW_UI_API AppCallback app_callback;
 }
 
 namespace WowDialog {
@@ -51,7 +64,7 @@ namespace WowDialog {
     //----------------------------
     // 后台加载
     //----------------------------
-    class BackendLoading {
+    class WOW_UI_API BackendLoading {
     private:
         TaskState state;
     public:
@@ -72,7 +85,7 @@ namespace WowDialog {
     //----------------------------
     // 全局加载
     //----------------------------
-    class GlobalLoading {
+    class WOW_UI_API GlobalLoading {
     private:
         TaskState state;
     public:
@@ -93,7 +106,7 @@ namespace WowDialog {
     //----------------------------
     // 消息通知窗口
     //----------------------------
-    class MessageDialog {
+    class WOW_UI_API MessageDialog {
     private:
         // 全局消息状态
         TaskState state;
@@ -105,6 +118,9 @@ namespace WowDialog {
         MessageDialog() {
             state = READY;
         }
+        bool IsRunning() {
+            return state == RUNNING;
+        }
         void Display();
         void Open(const std::string& msg, std::function<void()> callback = NULL) {
             message = msg;
@@ -115,51 +131,55 @@ namespace WowDialog {
     //----------------------------
     // 文件选择窗口
     //----------------------------
-    struct FileInfo {
+    struct WOW_UI_API FileInfo {
+        fs::path path;
         std::string filename;
         bool is_directory;
         bool is_checked;
     };
-    class FileDialog {
+    class WOW_UI_API FileDialog {
     private:
         TaskState state;
-        std::string file_directory;
-        char file_name[256];
+        fs::path current_path;
+        std::string current_name;
+        char input_filename[256];
         bool is_select_directory;
         bool is_save_file;
+        bool update;
         std::list<std::string> exts;
         std::list<FileInfo> fileinfo_list;
         std::list<std::pair<std::string, std::string>> const_directory;
-        bool update;
-        void UpdateFileInfo(const std::string& dirname);
+        void UpdateFileInfo();
     public:
         FileDialog();
+        bool IsRunning() {
+            return state == RUNNING;
+        }
         void Display();
         void Open();
-        std::string GetFileName();
-        std::list<std::string> GetFileNames();
-        std::string GetSaveName();
-        std::string GetDirName();
-        void ChangeToSelectFiles();
+        void Wait();
+        fs::path GetFileName();
+        std::list<fs::path> GetFileNames();
+        fs::path GetSaveName();
+        fs::path GetDirName();
+        void ChangeToSelectFiles(std::list<std::string>&& filters);
         void ChangeToSelectDirectory();
-        void ChangeToSaveFile();
-        void SetFilter(const std::list<std::string>& filters);
+        void ChangeToSaveFile(std::list<std::string>&& filters);
     };
-    extern WOW_API BackendLoading backend_loading;
-    extern WOW_API GlobalLoading global_loading;
-    extern WOW_API MessageDialog message_dialog;
-    extern WOW_API FileDialog file_dialog;
+    extern WOW_UI_API BackendLoading backend_loading;
+    extern WOW_UI_API GlobalLoading global_loading;
+    extern WOW_UI_API MessageDialog message_dialog;
+    extern WOW_UI_API FileDialog file_dialog;
 }
 
 namespace WowTask {
-    class TaskResult {
+    class WOW_UI_API TaskResult {
     public:
         // 任务结果
         bool state;
         // 任务结束提示
         std::string message;
         TaskResult(bool result, const std::string& msg = "");
-        ~TaskResult();
     };
     // 初始化全局任务线程
     void InitGlobalTaskThread();
@@ -170,9 +190,9 @@ namespace WowTask {
     // 关闭后台任务线程
     void ReleaseBackendTaskThread();
     // 创建全局任务
-    void CreateGlobalTask(std::function<TaskResult()> task);
+    WOW_UI_API void CreateGlobalTask(std::function<TaskResult()> task);
     // 创建后台任务
-    void CreateBackendTask(std::function<TaskResult()> task);
+    WOW_UI_API void CreateBackendTask(std::function<TaskResult()> task);
 }
 
 // 启动APP

@@ -1,4 +1,4 @@
-project(wow_common)
+project(wow_common VERSION 1.0)
 
 set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/../deps/spdlog)
 
@@ -21,3 +21,16 @@ set_target_properties(spdlog PROPERTIES
 add_library(wow_common SHARED ${SOURCES})
 target_include_directories(wow_common PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_libraries(wow_common spdlog)
+
+install(TARGETS wow_common
+    PUBLIC_HEADER DESTINATION wow_common.h
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION lib
+)
+
+install(FILES wow_common.h
+    DESTINATION include)
+
+install(DIRECTORY ${SPDLOG_DIR}/include/spdlog
+    DESTINATION include)

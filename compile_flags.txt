@@ -1,6 +1,9 @@
 -xc++
 -std=c++20
 
+-DBUILD_PLOT
+-DBUILD_DEMO
+
 -I
 imgui_extends
 -I
@@ -8,18 +11,16 @@ wow_common
 -I
 wow_ui
 -I
-wow_serial
+deps/imgui
 -I
-wow_socket
+deps/imgui/backends
 -I
-wow_subprocess
+deps/imgui/misc/cpp
 -I
-./deps/imgui/
+deps/implot
 -I
-./deps/imgui/backends
+deps/spdlog/include
 -I
-./deps/implot/
+deps/glfw/include
 -I
-./deps/spdlog/include
--I
-./deps/glfw/include
+deps/stb

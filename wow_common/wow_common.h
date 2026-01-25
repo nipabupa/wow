@@ -1,19 +1,19 @@
 #pragma once
-#include "spdlog/logger.h"
 #include <exception>
 #include <vector>
+#include "spdlog/logger.h"
 
 #ifdef WIN32
-#ifdef WOW_EXPORT
-#define WOW_API __declspec(dllexport)
+#ifdef WOW_COMMON_EXPORT
+#define WOW_COMMON_API __declspec(dllexport)
 #else
-#define WOW_API __declspec(dllimport)
+#define WOW_COMMON_API __declspec(dllimport)
 #endif
 #else
-#define WOW_API
+#define WOW_COMMON_API
 #endif
 
-class WowException : public std::exception {
+class WOW_COMMON_API WowException : public std::exception {
 private:
     std::string msg;
 public:
@@ -26,9 +26,9 @@ public:
 };
 
 namespace WowCommon {
-    extern WOW_API std::shared_ptr<spdlog::logger> logger;
-    void InitConsoleLogger();
-    void InitFileLogger(std::string log_path);
+    extern WOW_COMMON_API std::shared_ptr<spdlog::logger> logger;
+    WOW_COMMON_API void InitConsoleLogger();
+    WOW_COMMON_API void InitFileLogger(std::string log_path);
 }
 
 // 自定义睡眠
@@ -36,7 +36,7 @@ namespace WowCommon {
 
 namespace WowUtils {
     // 字符串分割
-    std::vector<std::string> StringSplit(std::string s, char deli);
+    WOW_COMMON_API std::vector<std::string> StringSplit(std::string& s, char deli);
     // 获取当前日期字符串
-    std::string GetCurrentDateTime();
+    WOW_COMMON_API std::string GetCurrentDateTime(char type = 'f');
 }

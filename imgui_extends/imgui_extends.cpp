@@ -3,6 +3,27 @@
 #include "imgui_extends.h"
 
 
+ImGuiExtendStyle::ImGuiExtendStyle() {
+    PrimaryColor.u32 = IM_COL32(84, 169, 255, 255);
+    PrimaryColor.vec4 = ImGui::ColorConvertU32ToFloat4(PrimaryColor.u32);
+    SecondaryColor.u32 = IM_COL32(84, 169, 255, 150);
+    SecondaryColor.vec4 = ImGui::ColorConvertU32ToFloat4(SecondaryColor.u32);
+    SuccessColor.u32 = IM_COL32(93, 194, 100, 255);
+    SuccessColor.vec4 = ImGui::ColorConvertU32ToFloat4(SuccessColor.u32);
+    WarnColor.u32 = IM_COL32(255, 174, 67, 255);
+    WarnColor.vec4 = ImGui::ColorConvertU32ToFloat4(WarnColor.u32);
+    DangerColor.u32 = IM_COL32(252, 114, 78, 255);
+    DangerColor.vec4 = ImGui::ColorConvertU32ToFloat4(DangerColor.u32);
+    LoadingColor.u32 = IM_COL32(90, 90, 90, 255);
+    LoadingColor.vec4 = ImGui::ColorConvertU32ToFloat4(LoadingColor.u32);
+    RedColor.u32 = IM_COL32(255, 0, 0, 255);
+    RedColor.vec4 = ImGui::ColorConvertU32ToFloat4(RedColor.u32);
+    GreenColor.u32 = IM_COL32(0, 255, 0, 255);
+    GreenColor.vec4 = ImGui::ColorConvertU32ToFloat4(GreenColor.u32);
+    BlueColor.u32 = IM_COL32(0, 0, 255, 255);
+    BlueColor.vec4 = ImGui::ColorConvertU32ToFloat4(BlueColor.u32);
+}
+
 namespace ImGui {
     static ImGuiExtendStyle imgui_extend_style;
 
@@ -10,8 +31,8 @@ namespace ImGui {
         return imgui_extend_style;
     }
 
-    void Title(const char* label, const ImVec4* color) {
-        PushFont(NULL, GetStyle().FontSizeBase + 8);
+    void Title(const char* label, const ImVec4* color, int lager) {
+        PushFont(NULL, GetStyle().FontSizeBase + lager);
         if(color == nullptr) {
             TextColored(*color, "%s", label);
         } else {
@@ -20,8 +41,8 @@ namespace ImGui {
         PopFont();
     }
 
-    void Section(const char* label, const ImVec4* color) {
-        PushFont(NULL, GetStyle().FontSizeBase + 4);
+    void Section(const char* label, const ImVec4* color, int lager) {
+        PushFont(NULL, GetStyle().FontSizeBase + lager);
         if(color == nullptr) {
             TextColored(*color, "%s", label);
         } else {
@@ -31,14 +52,14 @@ namespace ImGui {
     }
 
     bool PrimaryButton(const char* label, const ImVec2& size) {
-        PushStyleColor(ImGuiCol_Text, imgui_extend_style.PrimaryColor);
+        PushStyleColor(ImGuiCol_Text, imgui_extend_style.PrimaryColor.vec4);
         auto state = Button(label);
         PopStyleColor();
         return state;
     }
 
     bool DangerButton(const char* label, const ImVec2& size) {
-        PushStyleColor(ImGuiCol_Text, imgui_extend_style.DangerColor);
+        PushStyleColor(ImGuiCol_Text, imgui_extend_style.DangerColor.vec4);
         auto state = Button(label, size);
         PopStyleColor();
         return state;
@@ -133,9 +154,9 @@ namespace ImGui {
         }
         ImU32 col_bg;
         if (IsItemHovered())
-            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], ImGui::ColorConvertU32ToFloat4(style_.SecondaryColor), t));
+            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBgHovered], style_.SecondaryColor.vec4, t));
         else
-            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], ImGui::ColorConvertU32ToFloat4(style_.PrimaryColor), t));
+            col_bg = GetColorU32(ImLerp(style.Colors[ImGuiCol_FrameBg], style_.PrimaryColor.vec4, t));
         draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), col_bg, height * 0.5f);
         draw_list->AddCircleFilled(ImVec2(p.x + radius + t * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
         SameLine();
@@ -144,14 +165,14 @@ namespace ImGui {
         EndGroup();
     }
 
-    void CustomCombo(const char* label, const char* items[], short size, short& index, void (*callback)(), int flags) {
-        if (BeginCombo(label, items[index], flags)) {
-            for (int n = 0; n < size; n++) {
+    void CustomCombo(const char* label, const std::vector<std::string> items, short& index, std::function<void(const short& index, const std::string& value)> callback, int flags) {
+        if (BeginCombo(label, items[index].c_str(), flags)) {
+            for (int n = 0; n < items.size(); n++) {
                 const bool is_selected = (index == n);
-                if (Selectable(items[n], is_selected)) {
+                if (Selectable(items[n].c_str(), is_selected)) {
                     index = n;
-                    if (callback != NULL) {
-                        callback();
+                    if (callback != nullptr) {
+                        callback(index, items[index]);
                     }
                 }
                 if (is_selected) {
