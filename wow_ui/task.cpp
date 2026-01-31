@@ -1,13 +1,16 @@
+#include <atomic>
 #include <thread>
 #include "wow_common.h"
 #include "wow_ui.h"
 
 
 namespace WowTask {
-    static std::function<TaskResult()> global_task;
-    static std::function<TaskResult()> backend_task;
+    // 原子指针赋值确保任务指针正确
+    static std::atomic<TaskResult(*)> global_task;
+    static std::atomic<TaskResult(*)> backend_task;
     static std::thread* global_task_thread = nullptr;
     static std::thread* backend_task_thread = nullptr;
+    // 工作线程仅读取状态，无需加锁或原子状态
     static bool is_global_thread_running;
     static bool is_backend_thread_running;
 
@@ -18,7 +21,7 @@ namespace WowTask {
                 continue;
             }
             WowDialog::global_loading.Start();
-            auto result = global_task();
+            auto result = *global_task.load();
             WowDialog::global_loading.Stop();
             if(!result.message.empty()) {
                 WowDialog::message_dialog.Open(result.message);
@@ -34,7 +37,7 @@ namespace WowTask {
                 continue;
             }
             WowDialog::backend_loading.Start();
-            auto result = backend_task();
+            auto result = *backend_task.load();
             WowDialog::backend_loading.Stop();
             if(!result.message.empty()) {
                 WowDialog::message_dialog.Open(result.message);
@@ -64,14 +67,31 @@ namespace WowTask {
         is_backend_thread_running = false;
     }
     // 创建全局任务
-    void CreateGlobalTask(std::function<TaskResult()> task) {
+    WOW_UI_API void CreateGlobalTask(TaskResult(*task)) {
+        if(global_task != nullptr) {
+            WowDialog::message_dialog.Open("任务正在运行");
+            return;
+        }
         global_task = task;
     }
     // 创建后台任务
-    void CreateBackendTask(std::function<TaskResult()> task) {
+    WOW_UI_API void CreateBackendTask(TaskResult(*task)) {
         if(global_task != nullptr) {
+            WowDialog::message_dialog.Open("任务正在运行");
             return;
         }
         backend_task = task;
+    }
+
+    WOW_UI_API bool IsTaskRunning() {
+        return global_task!= nullptr || backend_task != nullptr;
+    }
+
+    WOW_UI_API bool IsGlobalTaskRunning() {
+        return global_task!= nullptr;
+    }
+
+    WOW_UI_API bool IsBackendTaskRunning() {
+        return backend_task != nullptr;
     }
 }

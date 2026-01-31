@@ -33,7 +33,7 @@ namespace ImGui {
 
     void Title(const char* label, const ImVec4* color, int lager) {
         PushFont(NULL, GetStyle().FontSizeBase + lager);
-        if(color == nullptr) {
+        if(color != nullptr) {
             TextColored(*color, "%s", label);
         } else {
             TextUnformatted(label);
@@ -53,7 +53,7 @@ namespace ImGui {
 
     bool PrimaryButton(const char* label, const ImVec2& size) {
         PushStyleColor(ImGuiCol_Text, imgui_extend_style.PrimaryColor.vec4);
-        auto state = Button(label);
+        auto state = Button(label, size);
         PopStyleColor();
         return state;
     }
@@ -165,7 +165,7 @@ namespace ImGui {
         EndGroup();
     }
 
-    void CustomCombo(const char* label, const std::vector<std::string> items, short& index, std::function<void(const short& index, const std::string& value)> callback, int flags) {
+    void CustomCombo(const char* label, const std::vector<std::string>& items, short& index, std::function<void(const short& index, const std::string& value)> callback, int flags) {
         if (BeginCombo(label, items[index].c_str(), flags)) {
             for (int n = 0; n < items.size(); n++) {
                 const bool is_selected = (index == n);

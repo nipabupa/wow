@@ -30,8 +30,8 @@ endif()
 # 创建编译选项
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message(STATUS "Using MSVC compiler")
-    set(CMAKE_CXX_FLAGS_DEBUG "/utf-8 /Zi /Od /EHsc")
-    set(CMAKE_CXX_FLAGS_RELEASE "/utf-8 /O2 /MT /DNDEBUG /EHsc")
+    set(CMAKE_CXX_FLAGS_DEBUG "/utf-8 /Zi /Od /MDd /EHsc")
+    set(CMAKE_CXX_FLAGS_RELEASE "/utf-8 /O2 /MD /DNDEBUG /EHsc")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     message(STATUS "Using GCC compiler")
     set(CMAKE_CXX_FLAGS_DEBUG "-g -Wall -Wformat")
@@ -50,3 +50,7 @@ add_subdirectory(wow_ui)
 # add_subdirectory(wow_socket)
 # add_subdirectory(wow_subprocess)
 add_subdirectory(wow_example)
+
+# cmake配置
+install(FILES ${PROJECT_SOURCE_DIR}/cmake/wowConfig.cmake
+    DESTINATION .)

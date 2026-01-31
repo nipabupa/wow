@@ -7,7 +7,7 @@
 
 
 namespace WowCommon {
-    std::shared_ptr<spdlog::logger> logger;
+    WOW_COMMON_API std::shared_ptr<spdlog::logger> logger;
 
     WOW_COMMON_API void InitFileLogger(std::string log_path, unsigned int max_size, unsigned int max_num) {
         spdlog::cfg::load_env_levels("WOW_LOG_LEVEL");

@@ -20,6 +20,7 @@ set_target_properties(spdlog PROPERTIES
 # wow_common
 add_library(wow_common SHARED ${SOURCES})
 target_include_directories(wow_common PUBLIC ${PROJECT_SOURCE_DIR})
+target_compile_definitions(wow_common PRIVATE WOW_COMMON_EXPORT)
 target_link_libraries(wow_common spdlog)
 
 install(TARGETS wow_common

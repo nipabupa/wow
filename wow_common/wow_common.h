@@ -28,7 +28,7 @@ public:
 namespace WowCommon {
     extern WOW_COMMON_API std::shared_ptr<spdlog::logger> logger;
     WOW_COMMON_API void InitConsoleLogger();
-    WOW_COMMON_API void InitFileLogger(std::string log_path);
+    WOW_COMMON_API void InitFileLogger(std::string log_path, unsigned int max_size, unsigned int max_num);
 }
 
 // 自定义睡眠

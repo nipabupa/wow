@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <functional>
 #include <list>
 #include <string>
@@ -18,6 +19,8 @@ namespace fs = std::filesystem;
 
 namespace WowConfig {
     WOW_UI_API struct AppInfo {
+        bool backend_task = false;
+        bool global_task = false;
         // 设计窗口尺寸
         int width = 1280;
         int height = 768;
@@ -66,7 +69,7 @@ namespace WowDialog {
     //----------------------------
     class WOW_UI_API BackendLoading {
     private:
-        TaskState state;
+        std::atomic<TaskState> state;
     public:
         BackendLoading() {
             state = READY;
@@ -87,7 +90,7 @@ namespace WowDialog {
     //----------------------------
     class WOW_UI_API GlobalLoading {
     private:
-        TaskState state;
+        std::atomic<TaskState> state;
     public:
         GlobalLoading() {
             state = READY;
@@ -109,7 +112,7 @@ namespace WowDialog {
     class WOW_UI_API MessageDialog {
     private:
         // 全局消息状态
-        TaskState state;
+        std::atomic<TaskState> state;
         // 消息窗口内容
         std::string message;
         // 消息窗口确认回调
@@ -189,6 +192,12 @@ namespace WowTask {
     void ReleaseGlobalTaskThread();
     // 关闭后台任务线程
     void ReleaseBackendTaskThread();
+    // 是否任务运行
+    WOW_UI_API bool IsBackendTaskRunning();
+    // 是否任务运行
+    WOW_UI_API bool IsGlobalTaskRunning();
+    // 是否任务运行
+    WOW_UI_API bool IsTaskRunning();
     // 创建全局任务
     WOW_UI_API void CreateGlobalTask(std::function<TaskResult()> task);
     // 创建后台任务
@@ -196,4 +205,4 @@ namespace WowTask {
 }
 
 // 启动APP
-int Run();
+WOW_UI_API int Run();

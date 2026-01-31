@@ -8,6 +8,7 @@ file(GLOB_RECURSE SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
 # wow_ui
 add_library(wow_ui SHARED ${SOURCES})
 target_include_directories(wow_ui PUBLIC ${PROJECT_SOURCE_DIR} ${STB_DIR})
+target_compile_definitions(wow_ui PRIVATE WOW_UI_EXPORT)
 target_link_libraries(wow_ui imgui wow_common)
 
 install(TARGETS wow_ui

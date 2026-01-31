@@ -12,9 +12,9 @@
 
 namespace WowDialog {
     void BackendLoading::Display() {
-        auto font_size = ImGui::GetFontSize();
-        auto style = ImGui::GetStyle();
         if(state == RUNNING) {
+            auto font_size = ImGui::GetFontSize();
+            auto style = ImGui::GetStyle();
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
             ImGui::Begin("Loading", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoBackground);
             ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::GetExtendStyle().LoadingColor.vec4);
@@ -25,10 +25,10 @@ namespace WowDialog {
     }
 
     void GlobalLoading::Display() {
-        auto font_size = ImGui::GetFontSize();
         if(state == READY || message_dialog.IsRunning() || file_dialog.IsRunning()) {
             return;
         }
+        auto font_size = ImGui::GetFontSize();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(font_size / 2, 0));
         if(ImGui::BeginPopupModal("GlobalLoading", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Spinner("Spinner", font_size, font_size / 2, ImGui::GetExtendStyle().LoadingColor.vec4);
@@ -46,11 +46,11 @@ namespace WowDialog {
     }
 
     void MessageDialog::Display() {
-        auto style = ImGui::GetStyle();
-        auto font_size = ImGui::GetFontSize();
         if(state == READY) {
             return;
         }
+        auto style = ImGui::GetStyle();
+        auto font_size = ImGui::GetFontSize();
         if(ImGui::BeginPopupModal("注意##MessageDialog", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::SetWindowPos(ImVec2((WowConfig::app_info.width - ImGui::GetWindowSize().x) / 2, font_size * 10));
             ImGui::Text("%s", message.c_str());

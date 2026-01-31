@@ -4,6 +4,9 @@
 -DBUILD_PLOT
 -DBUILD_DEMO
 
+-DWOW_UI_EXPORT
+-DWOW_COMMON_EXPORT
+
 -I
 imgui_extends
 -I

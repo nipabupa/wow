@@ -4,6 +4,7 @@
 #include "imgui_extends.h"
 #include "wow_ui.h"
 #include "wow_common.h"
+#include <cinttypes>
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
@@ -73,13 +74,17 @@ static void glfw_error_callback(int error, const char* description) {
 // 窗口关闭回调
 //----------------------------
 static void glfw_close_callback(GLFWwindow* window) {
-    WowTask::ReleaseBackendTaskThread();
-    WowTask::ReleaseGlobalTaskThread();
+    if(WowTask::IsTaskRunning()) {
+        glfwSetWindowShouldClose(window, GLFW_FALSE);
+        return;
+    }
     if(WowConfig::app_callback.Teardown != nullptr || !WowConfig::app_callback.Teardown()) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     } else {
         glfwSetWindowShouldClose(window, GLFW_FALSE);
     }
+    WowTask::ReleaseBackendTaskThread();
+    WowTask::ReleaseGlobalTaskThread();
 }
 //----------------------------
 // APP入口
@@ -88,9 +93,19 @@ int Run() {
     auto& app_info = WowConfig::app_info;
     auto& app_callback = WowConfig::app_callback;
     if(app_info.log_path.size() != 0) {
-        WowCommon::InitFileLogger(app_info.log_path);
+        WowCommon::InitFileLogger(app_info.log_path, app_info.log_size, app_info.log_nums);
     } else {
         WowCommon::InitConsoleLogger();
+    }
+    if(app_callback.Setup != nullptr && !app_callback.Setup()) {
+        WowCommon::logger->error("APP初始化失败");
+        return 1;
+    }
+    if(app_info.backend_task) {
+        WowTask::InitBackendTaskThread();
+    }
+    if(app_info.global_task) {
+        WowTask::InitGlobalTaskThread();
     }
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
