@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <filesystem>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -14,11 +15,11 @@ namespace fs = std::filesystem;
 #define WOW_UI_API __declspec(dllimport)
 #endif
 #else
-#define WOW_UI_API
+#define WOW_UI_API __attribute__((visibility("default")))
 #endif
 
 namespace WowConfig {
-    WOW_UI_API struct AppInfo {
+    struct WOW_UI_API AppInfo {
         bool backend_task = false;
         bool global_task = false;
         // 设计窗口尺寸
@@ -42,7 +43,7 @@ namespace WowConfig {
 #endif
     };
 
-    WOW_UI_API struct AppCallback {
+    struct WOW_UI_API AppCallback {
         // 初始化数据加载
         std::function<bool()> Setup = nullptr;
         // Frame渲染
@@ -142,14 +143,15 @@ namespace WowDialog {
     };
     class WOW_UI_API FileDialog {
     private:
-        TaskState state;
+        std::atomic<TaskState> state;
         fs::path current_path;
         std::string current_name;
         char input_filename[256];
         bool is_select_directory;
         bool is_save_file;
         bool update;
-        std::list<std::string> exts;
+        short ext_index = 0;
+        std::vector<std::string> exts;
         std::list<FileInfo> fileinfo_list;
         std::list<std::pair<std::string, std::string>> const_directory;
         void UpdateFileInfo();
@@ -165,9 +167,9 @@ namespace WowDialog {
         std::list<fs::path> GetFileNames();
         fs::path GetSaveName();
         fs::path GetDirName();
-        void ChangeToSelectFiles(std::list<std::string>&& filters);
+        void ChangeToSelectFiles(std::vector<std::string>&& filters);
         void ChangeToSelectDirectory();
-        void ChangeToSaveFile(std::list<std::string>&& filters);
+        void ChangeToSaveFile(std::vector<std::string>&& filters);
     };
     extern WOW_UI_API BackendLoading backend_loading;
     extern WOW_UI_API GlobalLoading global_loading;
@@ -176,14 +178,6 @@ namespace WowDialog {
 }
 
 namespace WowTask {
-    class WOW_UI_API TaskResult {
-    public:
-        // 任务结果
-        bool state;
-        // 任务结束提示
-        std::string message;
-        TaskResult(bool result, const std::string& msg = "");
-    };
     // 初始化全局任务线程
     void InitGlobalTaskThread();
     // 初始化后台任务线程
@@ -199,9 +193,9 @@ namespace WowTask {
     // 是否任务运行
     WOW_UI_API bool IsTaskRunning();
     // 创建全局任务
-    WOW_UI_API void CreateGlobalTask(std::function<TaskResult()> task);
+    WOW_UI_API void CreateGlobalTask(std::string(*task)());
     // 创建后台任务
-    WOW_UI_API void CreateBackendTask(std::function<TaskResult()> task);
+    WOW_UI_API void CreateBackendTask(std::string(*task)());
 }
 
 // 启动APP

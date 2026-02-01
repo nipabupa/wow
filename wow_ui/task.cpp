@@ -6,8 +6,8 @@
 
 namespace WowTask {
     // 原子指针赋值确保任务指针正确
-    static std::atomic<TaskResult(*)> global_task;
-    static std::atomic<TaskResult(*)> backend_task;
+    static std::atomic<std::string(*)()> global_task;
+    static std::atomic<std::string(*)()> backend_task;
     static std::thread* global_task_thread = nullptr;
     static std::thread* backend_task_thread = nullptr;
     // 工作线程仅读取状态，无需加锁或原子状态
@@ -21,10 +21,10 @@ namespace WowTask {
                 continue;
             }
             WowDialog::global_loading.Start();
-            auto result = *global_task.load();
+            auto result = global_task.load()();
             WowDialog::global_loading.Stop();
-            if(!result.message.empty()) {
-                WowDialog::message_dialog.Open(result.message);
+            if(!result.empty()) {
+                WowDialog::message_dialog.Open(result.c_str());
             }
             global_task = nullptr;
         }
@@ -37,10 +37,10 @@ namespace WowTask {
                 continue;
             }
             WowDialog::backend_loading.Start();
-            auto result = *backend_task.load();
+            auto result = backend_task.load()();
             WowDialog::backend_loading.Stop();
-            if(!result.message.empty()) {
-                WowDialog::message_dialog.Open(result.message);
+            if(!result.empty()) {
+                WowDialog::message_dialog.Open(result);
             }
             backend_task = nullptr;
         }
@@ -67,7 +67,7 @@ namespace WowTask {
         is_backend_thread_running = false;
     }
     // 创建全局任务
-    WOW_UI_API void CreateGlobalTask(TaskResult(*task)) {
+    WOW_UI_API void CreateGlobalTask(std::string(*task)()) {
         if(global_task != nullptr) {
             WowDialog::message_dialog.Open("任务正在运行");
             return;
@@ -75,7 +75,7 @@ namespace WowTask {
         global_task = task;
     }
     // 创建后台任务
-    WOW_UI_API void CreateBackendTask(TaskResult(*task)) {
+    WOW_UI_API void CreateBackendTask(std::string(*task)()) {
         if(global_task != nullptr) {
             WowDialog::message_dialog.Open("任务正在运行");
             return;

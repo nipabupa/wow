@@ -11,6 +11,11 @@
 
 
 namespace WowDialog {
+    WOW_UI_API BackendLoading backend_loading;
+    WOW_UI_API GlobalLoading global_loading;
+    WOW_UI_API MessageDialog message_dialog;
+    WOW_UI_API FileDialog file_dialog;
+
     void BackendLoading::Display() {
         if(state == RUNNING) {
             auto font_size = ImGui::GetFontSize();
@@ -121,8 +126,8 @@ namespace WowDialog {
     }
 
     void FileDialog::Open() {
-        state = START;
         update = true;
+        state = START;
     }
 
     void FileDialog::Wait() {
@@ -131,9 +136,8 @@ namespace WowDialog {
         } while(state == RUNNING);
     }
 
-    void FileDialog::ChangeToSelectFiles(std::list<std::string>&& filters) {
-        exts.clear();
-        exts.splice(exts.end(), filters);
+    void FileDialog::ChangeToSelectFiles(std::vector<std::string>&& filters) {
+        exts = filters;
         is_select_directory = false;
         is_save_file = false;
     }
@@ -143,9 +147,8 @@ namespace WowDialog {
         is_save_file = false;
     }
 
-    void FileDialog::ChangeToSaveFile(std::list<std::string>&& filters) {
-        exts.clear();
-        exts.splice(exts.end(), filters);
+    void FileDialog::ChangeToSaveFile(std::vector<std::string>&& filters) {
+        exts = filters;
         is_select_directory = true;
         is_save_file = true;
     }
@@ -178,7 +181,6 @@ namespace WowDialog {
     }
 
     void FileDialog::Display() {
-        auto style = ImGui::GetExtendStyle();
         if(state == READY || message_dialog.IsRunning()) {
             return;
         }
@@ -189,6 +191,7 @@ namespace WowDialog {
             UpdateFileInfo();
             update = false;
         }
+        auto style = ImGui::GetExtendStyle();
         auto font_size = ImGui::GetFontSize();
         ImVec2 button_size = ImVec2(font_size * 6, 0);
         if(ImGui::BeginPopupModal("文件选择##FileDialog", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize)) {
@@ -215,12 +218,23 @@ namespace WowDialog {
             ImGui::PushItemWidth(font_size*30);
             ImGui::InputText("当前目录", &current_name);
             ImGui::PopItemWidth();
+            ImGui::SameLine();
+            if(ImGui::Button("修改目录##FileDialog", button_size)) {
+                current_path = current_name;
+                update = true;
+            }
             ImGui::EndGroup();
             // 输入
             if(is_save_file) {
+                ImGui::BeginGroup();
                 ImGui::PushItemWidth(font_size*40);
                 ImGui::InputText("输入文件名##FileDialog", input_filename, 256);
                 ImGui::PopItemWidth();
+                ImGui::SameLine();
+                ImGui::PushItemWidth(font_size*20);
+                ImGui::CustomCombo("文件类型##FileDialog", exts, ext_index);
+                ImGui::PushItemWidth(font_size*20);
+                ImGui::EndGroup();
             }
             // 内容
             ImGui::BeginGroup();

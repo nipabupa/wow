@@ -1,22 +1,32 @@
-#include <thread>
-#include <chrono>
 #include "imgui.h"
-#include "wow.h"
-#include "common.h"
+#include "imgui_extends.h"
+#include "wow_common.h"
+#include "wow_ui.h"
+#include <vector>
 //----------------------------
 // 主窗口关闭回调
 //----------------------------
-void Close() {
-    logger.Info("exit");
+bool Close() {
+    WowCommon::logger->info("exit");
+    return true;
 }
-void Hello() {
+
+std::string MyTaskWithoutMessage() {
     std::this_thread::sleep_for(std::chrono::seconds(5));
+    return "";
+}
+
+std::string MyTaskWithMessage() {
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    return "TaskEnd";
 }
 //----------------------------
 // 主画面内容
 //----------------------------
-const char* items[] = {"111", "222", "333"};
-void DrawContent() {
+const std::vector<std::string> items = {"111", "222", "333"};
+
+void Draw() {
+    auto font_size = ImGui::GetFontSize();
     static float f = 0.0f;
     static short index = 0;
     static bool state;
@@ -33,7 +43,7 @@ void DrawContent() {
     ImGui::PopItemWidth();
     ImGui::SameLine();
     ImGui::PushItemWidth(200.0f);
-    ImGui::CustomCombo("选择", items, 3, index, NULL);
+    ImGui::CustomCombo("选择", items, index, NULL);
     ImGui::PopItemWidth();
     ImGui::SameLine();
     static int counter = 0;
@@ -72,32 +82,31 @@ void DrawContent() {
     // 任务类
     ImGui::Section("前后台任务");
     ImGui::BeginGroup();
-    if(ImGui::Button("前台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        App::CreateGlobalTask("前台任务", Hello);
+    if(ImGui::Button("前台任务", ImVec2(font_size * 6, 0))) {
+        WowTask::CreateGlobalTask(MyTaskWithoutMessage);
     }
     ImGui::SameLine();
-    if(ImGui::Button("后台任务", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        App::CreateBackendTask("后台任务", Hello);
+    if(ImGui::Button("后台任务", ImVec2(font_size * 6, 0))) {
+        WowTask::CreateBackendTask(MyTaskWithMessage);
     }
     ImGui::SameLine();
-    if(ImGui::Button("消息窗口", ImVec2(ImGui::GetFontSize() * 6, 0))) {
-        App::message_dialog.Open("消息窗口");
+    if(ImGui::Button("消息窗口", ImVec2(font_size * 6, 0))) {
+        WowDialog::message_dialog.Open("消息窗口");
     }
     ImGui::SameLine();
-    if(ImGui::Button("选择文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        App::file_dialog.ChangeToSelectFiles();
-        App::file_dialog.SetFilter({"h", "cpp"});
-        App::file_dialog.Open();
+    if(ImGui::Button("选择文件", ImVec2(font_size * 8, 0))) {
+        WowDialog::file_dialog.ChangeToSelectFiles({"h", "cpp"});
+        WowDialog::file_dialog.Open();
     }
     ImGui::SameLine();
-    if(ImGui::Button("选择目录", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        App::file_dialog.ChangeToSelectDirectory();
-        App::file_dialog.Open();
+    if(ImGui::Button("选择目录", ImVec2(font_size * 8, 0))) {
+        WowDialog::file_dialog.ChangeToSelectDirectory();
+        WowDialog::file_dialog.Open();
     }
     ImGui::SameLine();
-    if(ImGui::Button("保存到文件", ImVec2(ImGui::GetFontSize() * 8, 0))) {
-        App::file_dialog.ChangeToSaveFile();
-        App::file_dialog.Open();
+    if(ImGui::Button("保存到文件", ImVec2(font_size * 8, 0))) {
+        WowDialog::file_dialog.ChangeToSaveFile({"h", "cpp"});
+        WowDialog::file_dialog.Open();
     }
     ImGui::EndGroup();
     // 表格
@@ -135,25 +144,23 @@ void DrawContent() {
     ImGui::EndChild();
 }
 
-void DrawWindow() {
-    App::backend_loading.Display();
-    App::global_loading.Display();
-    App::message_dialog.Display();
-    App::file_dialog.Display();
-}
+int main() {
+    // APP尺寸
+    WowConfig::app_info.width = 1280;
+    WowConfig::app_info.height = 768;
+    WowConfig::app_info.font_base = 16.0;
+    WowConfig::app_info.name = "wow_example";
+    // 日志不设置默认为console输出
+    // WowConfig::app_info.log_path = "wow.txt";    // 日志路径
+    // WowConfig::app_info.log_size = 10*1024*1024; // 单个日志文件10MB
+    // WowConfig::app_info.log_nums = 5;            // 5个日志文件滚动
+    // 启动前台任务线程
+    WowConfig::app_info.global_task = true;
+    // 启动后台任务线程
+    WowConfig::app_info.backend_task = true;
 
-void Draw() {
-    //----------------------------
-    // 主窗口渲染
-    //----------------------------
-    DrawWindow();
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
-    ImGui::Begin("main", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
-    DrawContent();
-    if (ImGui::GetWindowPos().y != 0) {
-        ImGui::SetWindowSize(ImVec2(App::width, App::height));
-        ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
-    }
-    ImGui::End();
-    ImGui::PopStyleVar();
+    // 配置渲染回调
+    WowConfig::app_callback.Draw = Draw;
+    WowConfig::app_callback.Teardown = Close;
+    Run();
 }

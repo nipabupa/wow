@@ -4,7 +4,6 @@
 #include "imgui_extends.h"
 #include "wow_ui.h"
 #include "wow_common.h"
-#include <cinttypes>
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
@@ -15,10 +14,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+namespace WowConfig {
+    WOW_UI_API AppInfo app_info;
+    WOW_UI_API AppCallback app_callback;
+}
+
 //----------------------------
 // 主题初始化
 //----------------------------
-void InitStyle(float scale) {
+static void InitStyle(float scale) {
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
     ImGuiExtendStyle& style_ = ImGui::GetExtendStyle();

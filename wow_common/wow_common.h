@@ -10,7 +10,7 @@
 #define WOW_COMMON_API __declspec(dllimport)
 #endif
 #else
-#define WOW_COMMON_API
+#define WOW_COMMON_API __attribute__((visibility("default")))
 #endif
 
 class WOW_COMMON_API WowException : public std::exception {
