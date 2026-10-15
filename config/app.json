@@ -1,0 +1,10 @@
+{
+    "width": 1280,
+    "height": 800,
+    "font_base": 16,
+    "log_enabled": true,
+    "log_path": "log",
+    "log_size": 102400,
+    "log_nums": 5,
+    "force_close": false
+}
