@@ -1,5 +1,6 @@
 #pragma once
 #include <atomic>
+#include <list>
 #include <string>
 #include <thread>
 
@@ -12,6 +13,7 @@ class WowThread {
         WowThread();
         bool isRunning();
         void stop();
+        void sendToUi();
 
     protected:
         void run();

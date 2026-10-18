@@ -1,25 +1,33 @@
 #pragma once
-#include <list>
 #include <GLFW/glfw3.h>
+#include <functional>
+#include <queue>
 #include <spdlog/logger.h>
 
 #include "wow_theme.h"
 #include "wow_config.h"
-#include "wow_thread.h"
 
 
 class WowApp {
     public:
         WowApp();
         void exec();
-        std::list<WowThread> thread_list;
-        std::shared_ptr<spdlog::logger> logger;
-        WowConfig config;
+
     protected:
-        virtual void build();
-        WowTheme theme;
         static WowApp* self;
+
+        WowConfig config_;
+        std::shared_ptr<spdlog::logger> logger_;
+        WowTheme theme_;
+        // UI
+        virtual void build();
+        // app关闭回调
+        virtual bool onClose();
+        // app初始化完成UI未渲染前回调
+        virtual void onSetup();
     private:
+        // UI线程任务队列
+        std::queue<std::function<void()>> taskQueue_;
         static void glfwErrorCallback(int error, const char* description);
         static void glfwCloseCallback(GLFWwindow* window);
 };

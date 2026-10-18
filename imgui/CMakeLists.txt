@@ -9,7 +9,7 @@ set(IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/imgui_draw.cpp
     ${PROJECT_SOURCE_DIR}/imgui_tables.cpp
     ${PROJECT_SOURCE_DIR}/imgui_widgets.cpp
-    ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
+    # ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
     ${PROJECT_SOURCE_DIR}/imgui_extends.cpp
 )
 
@@ -19,19 +19,37 @@ set(IMPLOT_SOURCES
     ${PROJECT_SOURCE_DIR}/implot_items.cpp
 )
 
-# Linux自行安装glfw开发库, Window使用预编译组件vc2022
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    # windows 可以MSVC与Mingw64
-    add_library(glfw STATIC IMPORTED)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        set(GLFW_LIB ${GLFW_DIR}/lib-vc2022/glfw3_mt.lib)
+find_package(glfw QUIET)
+if(NOT glfw_FOUND)
+    if(BUILD_FROM_NETWORK)
+        FetchContent_Declare(
+            glfw
+            GIT_REPOSITORY https://gitee.com/nipabupa/glfw.git
+            GIT_TAG        3.5.1
+            GIT_SHALLOW    TRUE
+        )
+        set(GLFW_BUILD_DOCS     OFF CACHE BOOL "" FORCE)
+        set(GLFW_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+        set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+        set(GLFW_INSTALL        OFF CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(glfw)
     else()
-        set(GLFW_LIB ${GLFW_DIR}/lib-mingw-w64/libglfw3.a)
+        add_library(glfw STATIC IMPORTED)
+        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+            # windows 可以MSVC与Mingw64
+            if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+                set(GLFW_LIB ${GLFW_DIR}/lib-vc2022/glfw3_mt.lib)
+            else()
+                set(GLFW_LIB ${GLFW_DIR}/lib-mingw-w64/libglfw3.a)
+            endif()
+        else()
+            set(GLFW_LIB ${GLFW_DIR}/lib/libglfw3.lib)
+        endif()
+        set_target_properties(glfw PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES ${GLFW_DIR}/include
+            IMPORTED_LOCATION ${GLFW_LIB}
+        )
     endif()
-    set_target_properties(glfw PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES ${GLFW_DIR}/include
-        IMPORTED_LOCATION ${GLFW_LIB}
-    )
 endif()
 
 add_library(imgui STATIC

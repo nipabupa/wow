@@ -6,22 +6,23 @@ using json = nlohmann::json;
 
 
 WowConfig::WowConfig() {
+
 }
 
 void WowConfig::Load() {
     std::ifstream f("config/app.json");
     json obj = json::parse(f);
 
-    width = obj.at("width");
-    height = obj.at("height");
-    font_base = obj.at("font_base");
+    width_ = obj.at("width");
+    height_ = obj.at("height");
+    fontBase_ = obj.at("font_base");
 
-    log_enabled = obj.at("log_enabled");
-    if(log_enabled) {
-        log_path = obj.at("log_path");
-        log_size = obj.at("log_size");
-        log_num = obj.at("log_num");
+    logEnabled_ = obj.at("log_enabled");
+    if(logEnabled_) {
+        logPath_ = obj.at("log_path");
+        logSize_ = obj.at("log_size");
+        logNum_ = obj.at("log_num");
     }
 
-    force_close = obj.at("force_close");
+    forceClose_ = obj.at("force_close");
 }

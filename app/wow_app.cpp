@@ -1,9 +1,10 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "imgui_extends.h"
+// #include "imgui_extends.h"
 #include "wow_app.h"
 #include "wow_common.h"
+#include <filesystem>
 // 消除OpenGL弃用警告
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
@@ -15,71 +16,85 @@
 #include "stb_image.h"
 
 
+// 自身指针
+WowApp* WowApp::self = nullptr;
+
 WowApp::WowApp() {
     self = this;
     // 配置文件加载
-    config.Load();
+    config_.Load();
     // 初始化日志
-    if(config.log_enabled) {
-        logger = WowUtils::InitFileLogger(config.log_path, config.log_size, config.log_num);
+    if(config_.logEnabled_) {
+        logger_ = WowUtils::InitFileLogger(config_.logPath_, config_.logSize_, config_.logNum_);
     } else {
-        logger = WowUtils::InitConsoleLogger();
+        logger_ = WowUtils::InitConsoleLogger();
     }
     // 加载主题
-    theme.Load();
+    theme_.Load();
 }
 
 void WowApp::glfwErrorCallback(int error, const char* description) {
-    self->logger->error("GLFW Error {} : {}", error, description);
+    self->logger_->error("GLFW Error {} : {}", error, description);
 }
 
 void WowApp::glfwCloseCallback(GLFWwindow* window) {
-    for(auto& task : self->thread_list) {
-        if(task.isRunning()) {
-            self->logger->warn("App thread {} is running", task.name);
-            glfwSetWindowShouldClose(window, GLFW_FALSE);
-            if(self->config.force_close) {
-                task.stop();
-            } else {
-                return;
-            }
-        }
+    if(self->onClose()) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    } else {
+        glfwSetWindowShouldClose(window, GLFW_FALSE);
     }
+}
+
+void WowApp::build() {
+    // 默认实现
+}
+
+void WowApp::onSetup() {
+    // 默认实现
+}
+
+bool WowApp::onClose() {
+    // 默认实现
+    return true;
 }
 
 void WowApp::exec() {
     glfwSetErrorCallback(glfwErrorCallback);
-
-    if (!glfwInit()) {
-        logger->error("GLFW初始化失败");
+    int code = glfwInit();
+    if (!code) {
+        logger_->error("GLFW初始化失败: {}", code);
         return;
     }
-    const char* glsl_version = "#version 130";
+    const char* glsl_version = "#version 130";   // TODO confirm
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_MAXIMIZED, 0);
     glfwWindowHint(GLFW_RESIZABLE, 0);
     // 创建上下文
     float scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-    config.width = (int)(config.width * scale);
-    config.height = (int)(config.height * scale);
-    GLFWwindow* window = glfwCreateWindow(config.width, config.height, config.name.c_str(), nullptr, nullptr);
+    // 根据系统缩放重新配置分辨率
+    config_.width_ = (int)(config_.width_ * scale);
+    config_.height_ = (int)(config_.height_ * scale);
+    GLFWwindow* window = glfwCreateWindow(config_.width_, config_.height_, config_.name_.c_str(), nullptr, nullptr);
     if (window == nullptr) {
-        logger->error("GLFW窗口创建失败");
+        logger_->error("GLFW窗口创建失败");
         return;
     }
-    glfwSetWindowCloseCallback(window, glfwCloseCallback);
+    // glfwSetWindowCloseCallback(window, glfwCloseCallback);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
+    // icon
     GLFWimage icon;
-    if(fs::exists(app_info.icon_path)) {
-        icon.pixels = stbi_load(app_info.icon_path.c_str(), &icon.width, &icon.height, 0, 4);
+    if(std::filesystem::exists(config_.iconPath_)) {
+        icon.pixels = stbi_load(config_.iconPath_.c_str(), &icon.width, &icon.height, 0, 4);
         if(!icon.pixels) {
-            WowCommon::logger->error("加载APP图标失败");
-            return 1;
+            logger_->error("加载APP图标失败");
+            return;
         }
         glfwSetWindowIcon(window, 1, &icon);
     }
+    // 生命周期函数
+    onSetup();
     // 初始化上下文
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -87,11 +102,12 @@ void WowApp::exec() {
     ImPlot::CreateContext();
 #endif
     ImGuiIO& io = ImGui::GetIO();
+
     // 支持键盘控制
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    io.Fonts->AddFontFromFileTTF(app_info.font_path.c_str());
+    // io.Fonts->AddFontFromFileTTF(app_info.font_path.c_str());
     // 缩放
-    InitStyle(scale);
+    // InitStyle(scale);
     // 初始化后端GLFW与OpenGL
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -110,23 +126,30 @@ void WowApp::exec() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // draw
-        WowDialog::message_dialog.Display();
-        WowDialog::file_dialog.Display();
-        WowDialog::global_loading.Display();
-        WowDialog::backend_loading.Display();
+        // WowDialog::message_dialog.Display();
+        // WowDialog::file_dialog.Display();
+        // WowDialog::global_loading.Display();
+        // WowDialog::backend_loading.Display();
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
         ImGui::Begin("app", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings);
         ImGui::PopStyleVar();
-        app_callback.Draw();
+        // app_callback.Draw();
         if (ImGui::GetWindowPos().y != 0) {
-            ImGui::SetWindowSize(ImVec2(app_info.width, app_info.height));
+            ImGui::SetWindowSize(ImVec2(config_.width_, config_.height_));
             ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
         }
+        // UI回调
+        while(!taskQueue_.empty()) {
+            auto task = taskQueue_.front();
+            taskQueue_.pop();
+            task();
+        }
+        build();
         ImGui::End();
         // Rendering
         ImGui::Render();
-        glfwGetFramebufferSize(window, &app_info.width, &app_info.height);
-        glViewport(0, 0, app_info.width, app_info.height);
+        glfwGetFramebufferSize(window, &config_.width_, &config_.height_);
+        glViewport(0, 0, config_.width_, config_.height_);
         glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -145,6 +168,4 @@ void WowApp::exec() {
     }
     glfwDestroyWindow(window);
     glfwTerminate();
-
-    return 0;
 }

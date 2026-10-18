@@ -127,7 +127,7 @@ namespace ImGui {
             const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a+g.Time*8) * radius, centre.y + ImSin(a+g.Time*8) * radius));
         }
-        window->DrawList->PathStroke(ColorConvertFloat4ToU32(color), false, thickness);
+        window->DrawList->PathStroke(ColorConvertFloat4ToU32(color), thickness);
     }
 
     void ToggleButton(const char* str_id, bool* v, const char* other_label) {

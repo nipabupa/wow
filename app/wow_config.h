@@ -4,18 +4,20 @@
 
 class WowConfig {
     public:
-        std::string name;
+        std::string name_;
         // ui
-        int width;
-        int height;
-        float font_base;
+        int width_;
+        int height_;
+        float fontBase_;
         // log
-        bool log_enabled;
-        std::string log_path;
-        int log_size;
-        int log_num;
+        bool logEnabled_;
+        std::string logPath_;
+        int logSize_;
+        int logNum_;
         // action
-        bool force_close;
+        bool forceClose_;
+        // icon
+        std::string iconPath_ = "assets/app.icon";
 
         WowConfig();
         void Load();

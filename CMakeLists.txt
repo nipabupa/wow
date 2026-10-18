@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.0)
+cmake_minimum_required(VERSION 3.16)
 
 # 项目名，自行修改
 project(wow VERSION 1.0)
@@ -13,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # 选择对应平台
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     message(STATUS "OS: Windows")
-    add_definitions(-DWIN32)  # windows添加WIN32标识
+    add_definitions(-DWIN32)  # 所有项目windows添加WIN32标识
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "OS: Linux")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -23,11 +23,13 @@ else()
 endif()
 
 # 默认构建类型为Debug
-set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/spdlog)
-set(GLFW_DIR ${PROJECT_SOURCE_DIR}/glfw)
-set(JSON_DIR ${PROJECT_SOURCE_DIR}/nlohmann-json)
 set(CMAKE_BUILD_TYPE Debug)
+# 默认启动网络构建，第三方库从网络下载构建
+# 关闭后启动本地依赖，需要再本地指定路径手动下载预编译库
+set(BUILD_FROM_NETWORK ON)
+# 启动可视化图表构建
 set(BUILD_IMPLOT ON)
+# 编译Demo
 set(BUILD_DEMO ON)
 
 # 创建编译选项
@@ -59,6 +61,14 @@ else()
     else()
         message(FATAL_ERROR "Unknow Compile: ${CMAKE_CXX_COMPILER_ID}")
     endif()
+endif()
+
+if(BUILD_FROM_NETWORK)
+    include(FetchContent)
+else()
+    set(SPDLOG_DIR ${PROJECT_SOURCE_DIR}/spdlog)
+    set(GLFW_DIR ${PROJECT_SOURCE_DIR}/glfw)
+    set(JSON_DIR ${PROJECT_SOURCE_DIR}/nlohmann-json)
 endif()
 
 add_subdirectory(imgui)
