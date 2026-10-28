@@ -26,10 +26,19 @@ class WowApp {
         // app初始化完成UI未渲染前回调
         virtual void onSetup();
     private:
+        // app窗口
+        GLFWwindow* window_ = nullptr;
+        // icon
+        GLFWimage icon_;
         // UI线程任务队列
         std::queue<std::function<void()>> taskQueue_;
         static void glfwErrorCallback(int error, const char* description);
         static void glfwCloseCallback(GLFWwindow* window);
+        void glfwContextInit();
+        void glfwContextRelease();
+        void imguiContextInit();
+        void imguiContextRelease();
+        void render();
 };
 
 
@@ -151,27 +160,3 @@ class WowApp {
 //     extern WOW_UI_API MessageDialog message_dialog;
 //     extern WOW_UI_API FileDialog file_dialog;
 // }
-//
-// namespace WowTask {
-//     // 初始化全局任务线程
-//     void InitGlobalTaskThread();
-//     // 初始化后台任务线程
-//     void InitBackendTaskThread();
-//     // 关闭全局任务线程
-//     void ReleaseGlobalTaskThread();
-//     // 关闭后台任务线程
-//     void ReleaseBackendTaskThread();
-//     // 是否任务运行
-//     WOW_UI_API bool IsBackendTaskRunning();
-//     // 是否任务运行
-//     WOW_UI_API bool IsGlobalTaskRunning();
-//     // 是否任务运行
-//     WOW_UI_API bool IsTaskRunning();
-//     // 创建全局任务
-//     WOW_UI_API void CreateGlobalTask(std::string(*task)());
-//     // 创建后台任务
-//     WOW_UI_API void CreateBackendTask(std::string(*task)());
-// }
-//
-// // 启动APP
-// WOW_UI_API int Run();

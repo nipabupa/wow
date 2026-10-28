@@ -6,3 +6,5 @@ msvcbuild
 deps
 compile_commands.json
 __cmake_systeminformation
+
+.aider*

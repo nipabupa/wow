@@ -8,7 +8,6 @@ class WowConfig {
         // ui
         int width_;
         int height_;
-        float fontBase_;
         // log
         bool logEnabled_;
         std::string logPath_;
@@ -18,6 +17,9 @@ class WowConfig {
         bool forceClose_;
         // icon
         std::string iconPath_ = "assets/app.icon";
+        // font
+        std::string baseFontPath_ = "assets/baseFont.ttf";
+        std::string iconFontPath_ = "assets/iconFont.ttf";
 
         WowConfig();
         void Load();

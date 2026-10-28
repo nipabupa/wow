@@ -10,16 +10,18 @@ set(SOURCES
 
 add_library(wow_app STATIC ${SOURCES})
 target_include_directories(wow_app PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(wow_app PRIVATE wow_flags)  # 编译参数不传递
 target_link_libraries(wow_app PUBLIC imgui wow_common)
 
-if(BUILD_IMPLOT)
-    target_compile_definitions(wow_app PRIVATE BUILD_IMPLOT)
+if(ENABLE_IMPLOT)
+    target_compile_definitions(wow_app PRIVATE ENABLE_IMPLOT)
 endif()
 
 # 寻找系统库
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
-    if(BUILD_FROM_NETWORK)
+    message(STATUS "nlohmann_json not found")
+    if(ENABLE_FROM_NETWORK)
         # 网络下载
         FetchContent_Declare(
             nlohmann_json
@@ -35,5 +37,3 @@ if(NOT nlohmann_json_FOUND)
         target_include_directories(wow_app PUBLIC ${JSON_DIR})
     endif()
 endif()
-
-

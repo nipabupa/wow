@@ -2,6 +2,7 @@ project(wow_common VERSION 1.0)
 
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
+    message(STATUS "spdlog not found")
     if(BUILD_FROM_NETWORK)
         FetchContent_Declare(
             spdlog
@@ -31,4 +32,5 @@ set(SOURCES
 # wow_common
 add_library(wow_common STATIC ${SOURCES})
 target_include_directories(wow_common PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_libraries(wow_common spdlog::spdlog)
+target_link_libraries(wow_common PRIVATE wow_flags)  # 编译参数不传递
+target_link_libraries(wow_common PUBLIC spdlog::spdlog)

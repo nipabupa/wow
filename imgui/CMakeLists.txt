@@ -11,16 +11,21 @@ set(IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/imgui_widgets.cpp
     # ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
     ${PROJECT_SOURCE_DIR}/imgui_extends.cpp
+    $<$<BOOL:${ENABLE_DEMO}>:${PROJECT_SOURCE_DIR}/imgui_demo.cpp>
 )
 
 # IMPLOT
 set(IMPLOT_SOURCES
     ${PROJECT_SOURCE_DIR}/implot.cpp
     ${PROJECT_SOURCE_DIR}/implot_items.cpp
+
+    $<$<CXX_COMPILER_ID:MSVC>:/utf-8 /Zi /Od /MDd /EHsc>
+    $<$<BOOL:${ENABLE_DEMO}>:${PROJECT_SOURCE_DIR}/implot_demo.cpp>
 )
 
-find_package(glfw QUIET)
-if(NOT glfw_FOUND)
+find_package(glfw3 QUIET)
+if(NOT glfw3_FOUND)
+    message(STATUS "glfw3 not found")
     if(BUILD_FROM_NETWORK)
         FetchContent_Declare(
             glfw
@@ -57,12 +62,11 @@ add_library(imgui STATIC
     $<$<BOOL:BUILD_IMPLOT>:${IMPLOT_SOURCES}>
 )
 
-target_include_directories(imgui PUBLIC
-    ${PROJECT_SOURCE_DIR}
-)
+target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(imgui PRIVATE wow_flags)  # 编译参数不传递
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    target_link_libraries(imgui glfw opengl32 gdi32 shell32)
+    target_link_libraries(imgui PUBLIC glfw opengl32 gdi32 shell32)
 else()
-    target_link_libraries(imgui glfw GL)
+    target_link_libraries(imgui PUBLIC glfw GL)
 endif()
