@@ -26,7 +26,7 @@ set(IMPLOT_SOURCES
 find_package(glfw3 QUIET)
 if(NOT glfw3_FOUND)
     message(STATUS "glfw3 not found")
-    if(BUILD_FROM_NETWORK)
+    if(ENABLE_NETWORK)
         FetchContent_Declare(
             glfw
             GIT_REPOSITORY https://gitee.com/nipabupa/glfw.git
@@ -59,7 +59,7 @@ endif()
 
 add_library(imgui STATIC
     ${IMGUI_SOURCES}
-    $<$<BOOL:BUILD_IMPLOT>:${IMPLOT_SOURCES}>
+    $<$<BOOL:ENABLE_IMPLOT>:${IMPLOT_SOURCES}>
 )
 
 target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR})

@@ -3,7 +3,7 @@ project(wow_common VERSION 1.0)
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
     message(STATUS "spdlog not found")
-    if(BUILD_FROM_NETWORK)
+    if(ENABLE_NETWORK)
         FetchContent_Declare(
             spdlog
             GIT_REPOSITORY https://gitee.com/nipabupa/spdlog.git

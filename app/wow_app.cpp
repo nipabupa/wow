@@ -10,7 +10,7 @@
 #define GL_SILENCE_DEPRECATION
 #include <GLFW/glfw3.h>
 #define IMGUI_ENABLE_FREETYPE
-#ifdef BUILD_IMPLOT
+#ifdef EMABLE_IMPLOT
 #include "implot.h"
 #endif
 #define STB_IMAGE_IMPLEMENTATION
@@ -107,7 +107,7 @@ void WowApp::imguiContextInit() {
     // 初始化上下
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-#ifdef BUILD_IMPLOT
+#ifdef EMABLE_IMPLOT
     ImPlot::CreateContext();
 #endif
     theme_.buildFonts(config_);
@@ -121,7 +121,7 @@ void WowApp::imguiContextRelease() {
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-#ifdef BUILD_IMPLOT
+#ifdef EMABLE_IMPLOT
     ImPlot::DestroyContext();
 #endif
     ImGui::DestroyContext();

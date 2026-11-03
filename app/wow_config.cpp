@@ -37,7 +37,7 @@ void WowConfig::Load() {
     // 检查字体
     if(!std::filesystem::is_regular_file(baseFontPath_)) {
 #ifdef _WIN32
-        basefontPath_ = "C:\Windows\Fonts\Deng.ttc";
+        baseFontPath_ = "C:\\Windows\\Fonts\\Deng.ttc";
 #else
         baseFontPath_ = "/usr/share/fonts/noto-cjk/NotoSansCJK-Medium.ttc";
 #endif
@@ -45,7 +45,7 @@ void WowConfig::Load() {
 
     if(!std::filesystem::is_regular_file(iconFontPath_)) {
 #ifdef _WIN32
-        iconfontPath_ = "C:\Windows\Fonts\Deng.ttc";
+        iconFontPath_ = "C:\\Windows\\Fonts\\Deng.ttc";
 #else
         iconFontPath_ = "/usr/share/fonts/TTF/MesloLGSNerdFont-Regular.ttf";
 #endif
