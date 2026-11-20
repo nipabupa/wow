@@ -9,8 +9,8 @@ set(IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/imgui_draw.cpp
     ${PROJECT_SOURCE_DIR}/imgui_tables.cpp
     ${PROJECT_SOURCE_DIR}/imgui_widgets.cpp
-    # ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
-    ${PROJECT_SOURCE_DIR}/imgui_extends.cpp
+    ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
+    # ${PROJECT_SOURCE_DIR}/imgui_extends.cpp
     $<$<BOOL:${ENABLE_DEMO}>:${PROJECT_SOURCE_DIR}/imgui_demo.cpp>
 )
 
@@ -57,6 +57,11 @@ if(NOT glfw3_FOUND)
     endif()
 endif()
 
+find_package(FreeType QUIET)
+if(NOT FreeType_FOUND)
+    message(STATUS "FreeType not found")
+endif()
+
 add_library(imgui STATIC
     ${IMGUI_SOURCES}
     $<$<BOOL:ENABLE_IMPLOT>:${IMPLOT_SOURCES}>
@@ -64,6 +69,7 @@ add_library(imgui STATIC
 
 target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_libraries(imgui PRIVATE wow_flags)  # 编译参数不传递
+target_link_libraries(imgui PUBLIC FreeType::FreeType)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(imgui PUBLIC glfw opengl32 gdi32 shell32)

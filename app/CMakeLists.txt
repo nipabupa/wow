@@ -3,9 +3,10 @@ project(wow_app VERSION 1.0)
 set(SOURCES
     ${PROJECT_SOURCE_DIR}/wow_app.cpp
     ${PROJECT_SOURCE_DIR}/wow_config.cpp
+    ${PROJECT_SOURCE_DIR}/wow_theme.cpp
+    ${PROJECT_SOURCE_DIR}/wow_widgets.cpp
     ${PROJECT_SOURCE_DIR}/wow_dialog.cpp
     ${PROJECT_SOURCE_DIR}/wow_thread.cpp
-    ${PROJECT_SOURCE_DIR}/wow_theme.cpp
 )
 
 add_library(wow_app STATIC ${SOURCES})

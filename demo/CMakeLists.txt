@@ -6,4 +6,4 @@ add_executable(wow_demo
 )
 
 target_include_directories(wow_demo PRIVATE ${PROJECT_SOURCE_DIR})
-target_link_libraries(wow_demo PRIVATE wow_flags wow_app)  # 编译参数不传递
+target_link_libraries(wow_demo PRIVATE wow_flags wow_app)

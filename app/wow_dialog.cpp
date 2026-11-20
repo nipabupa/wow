@@ -3,10 +3,22 @@
 #include <list>
 #include <string>
 
+WowDialog::WowDialog() {}
 
-WowFileDialog::WowFileDialog() {
+void WowDialog::show() {
 
 }
+
+void WowDialog::open() {
+
+}
+
+void WowDialog::wait() {
+
+}
+
+
+WowFileDialog::WowFileDialog() {}
 
 void WowFileDialog::show() {
     static bool isOpen = true;

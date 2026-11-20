@@ -56,7 +56,6 @@ void WowApp::onSetup() {
 
 bool WowApp::onClose() {
     // 默认实现
-    logger_->info("close");
     return true;
 }
 
@@ -150,12 +149,10 @@ void WowApp::render() {
 
         // draw
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0);
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize);
         if(ImGui::Begin("app", NULL, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoSavedSettings)) {
             ImGui::PopStyleVar();
-            if (ImGui::GetWindowPos().y != 0) {
-                ImGui::SetWindowSize(ImVec2(config_.width_, config_.height_));
-                ImGui::SetWindowPos(ImVec2(0.0f, 0.0f));
-            }
             build();
         }
         ImGui::End();
