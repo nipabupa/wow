@@ -20,6 +20,9 @@ bool Application::onClose() {
 }
 
 void Application::build() {
-    WowWidgets::SizedTextColored(ImVec4(255, 0, 0, 255), 1.2, "%s", "按钮");
+    ImGui::SizedTextColored(ImVec4(255, 0, 0, 255), 1.2, "%s", "按钮");
+    ImGui::TextUnformatted("123123");
+    ImGui::TextUnformatted("你好");
+    ImGui::TextUnformatted("hello");
     ImGui::ShowDemoWindow();
 }

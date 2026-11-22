@@ -4,7 +4,6 @@ set(SOURCES
     ${PROJECT_SOURCE_DIR}/wow_app.cpp
     ${PROJECT_SOURCE_DIR}/wow_config.cpp
     ${PROJECT_SOURCE_DIR}/wow_theme.cpp
-    ${PROJECT_SOURCE_DIR}/wow_widgets.cpp
     ${PROJECT_SOURCE_DIR}/wow_dialog.cpp
     ${PROJECT_SOURCE_DIR}/wow_thread.cpp
 )
@@ -21,8 +20,9 @@ endif()
 # 寻找系统库
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
-    message(STATUS "nlohmann_json not found")
+    message(STATUS "system nlohmann_json not found")
     if(ENABLE_FROM_NETWORK)
+        message(STATUS "network nlohmann_json download...")
         # 网络下载
         FetchContent_Declare(
             nlohmann_json
@@ -33,9 +33,14 @@ if(NOT nlohmann_json_FOUND)
         set(JSON_Install    OFF CACHE BOOL "" FORCE)
         FetchContent_MakeAvailable(nlohmann_json)
         target_link_libraries(wow_app PUBLIC nlohmann_json)
+        message(STATUS "network nlohmann_json founded")
     else()
+        message(STATUS "local nlohmann_json config...")
         # Windows直接使用hpp头文件
         target_include_directories(wow_app PUBLIC ${JSON_DIR})
+        message(STATUS "local glfw3 founded")
     endif()
+else()
+    message(STATUS "system nlohmann_json founded")
 endif()
 

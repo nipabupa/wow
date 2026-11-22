@@ -2,7 +2,7 @@ project(wow_common VERSION 1.0)
 
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
-    message(STATUS "spdlog not found")
+    message(STATUS "system spdlog not found")
     if(ENABLE_NETWORK)
         FetchContent_Declare(
             spdlog
@@ -11,18 +11,18 @@ if(NOT spdlog_FOUND)
             GIT_SHALLOW    TRUE
         )
         FetchContent_MakeAvailable(spdlog)
+        message(STATUS "network spdload founded")
     else()
-        # Linux自行安装spdlog开发库, Window使用预编译组件
-        if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-            add_library(spdlog STATIC IMPORTED)
-            set_target_properties(spdlog PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES ${SPDLOG_DIR}/include
-                IMPORTED_LOCATION ${SPDLOG_LIB}
-            )
-        else()
-            find_package(spdlog)
-        endif()
+        message(STATUS "local spdlog config...")
+        add_library(spdlog STATIC IMPORTED)
+        set_target_properties(spdlog PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES ${SPDLOG_DIR}/include
+            IMPORTED_LOCATION ${SPDLOG_LIB}
+        )
+        message(STATUS "local spdlog founded")
     endif()
+else()
+    message(STATUS "system spdlog founded")
 endif()
 
 set(SOURCES

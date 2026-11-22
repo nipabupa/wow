@@ -1,5 +1,6 @@
 #include "wow_theme.h"
 #include "imgui.h"
+#include "imgui_freetype.h"
 
 
 WowTheme::WowTheme() {
@@ -60,6 +61,8 @@ void WowTheme::buildFonts(WowConfig& config) {
     // 中文字体
     ImFontConfig baseConfig;
     baseConfig.GlyphExcludeRanges = icon_ranges;
+    baseConfig.FontLoaderFlags = ImGuiFreeTypeLoaderFlags_LightHinting;
+    baseConfig.RasterizerDensity = scale_;
     ImFont* baseFont = io.Fonts->AddFontFromFileTTF(config.baseFontPath_.c_str(), fontBase_, &baseConfig);
     // Icon字体
     ImFontConfig iconConfig;
