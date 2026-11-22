@@ -38,3 +38,4 @@ if(NOT nlohmann_json_FOUND)
         target_include_directories(wow_app PUBLIC ${JSON_DIR})
     endif()
 endif()
+

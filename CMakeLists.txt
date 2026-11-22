@@ -35,6 +35,7 @@ endif()
 if(ENABLE_NETWORK)
     include(FetchContent)
 else()
+    # 没网络就指定依赖目录
     option(SPDLOG_DIR "spdlog dir" ${PROJECT_SOURCE_DIR}/spdlog)
     option(GLFW_DIR "glfw dir" ${PROJECT_SOURCE_DIR}/glfw)
     option(JSON_DIR "json dir" ${PROJECT_SOURCE_DIR}/nlohmann-json)

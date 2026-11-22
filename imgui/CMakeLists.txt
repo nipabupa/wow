@@ -10,7 +10,7 @@ set(IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/imgui_tables.cpp
     ${PROJECT_SOURCE_DIR}/imgui_widgets.cpp
     ${PROJECT_SOURCE_DIR}/imgui_freetype.cpp
-    # ${PROJECT_SOURCE_DIR}/imgui_extends.cpp
+    ${PROJECT_SOURCE_DIR}/wow_base_widgets.cpp
     $<$<BOOL:${ENABLE_DEMO}>:${PROJECT_SOURCE_DIR}/imgui_demo.cpp>
 )
 
@@ -57,9 +57,20 @@ if(NOT glfw3_FOUND)
     endif()
 endif()
 
-find_package(FreeType QUIET)
-if(NOT FreeType_FOUND)
+find_package(Freetype QUIET)
+if(NOT Freetype_FOUND)
     message(STATUS "FreeType not found")
+    if(ENABLE_NETWORK)
+        FetchContent_Declare(
+            freetype
+            GIT_REPOSITORY https://github.com/freetype/freetype.git
+            GIT_TAG        VER-2-15-0
+        )
+        set(FT_WITH_ZLIB OFF CACHE BOOL "" FORCE)
+        set(FT_WITH_PNG OFF CACHE BOOL "" FORCE)
+        set(FT_WITH_BZIP2 OFF CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(freetype)
+    endif()
 endif()
 
 add_library(imgui STATIC
@@ -68,8 +79,10 @@ add_library(imgui STATIC
 )
 
 target_include_directories(imgui PUBLIC ${PROJECT_SOURCE_DIR})
+# 自定义imgui配置
+target_compile_definitions(wow_app PRIVATE IMGUI_USER_CONFIG "wow_imconfig.h")
 target_link_libraries(imgui PRIVATE wow_flags)  # 编译参数不传递
-target_link_libraries(imgui PUBLIC FreeType::FreeType)
+target_link_libraries(imgui PUBLIC freetype)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(imgui PUBLIC glfw opengl32 gdi32 shell32)
