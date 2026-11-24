@@ -10,7 +10,7 @@ set(IMGUI_SOURCES
     ${PROJECT_SOURCE_DIR}/backend/imgui_impl_glfw.cpp
     ${PROJECT_SOURCE_DIR}/misc/cpp/imgui_stdlib.cpp
     ${PROJECT_SOURCE_DIR}/misc/freetype/imgui_freetype.cpp
-    ${PROJECT_SOURCE_DIR}/wow/wow_base_widgets.cpp
+    ${PROJECT_SOURCE_DIR}/wow/wow_widgets.cpp
     $<$<BOOL:${ENABLE_DEMO}>:${PROJECT_SOURCE_DIR}/imgui_demo.cpp>
 )
 
